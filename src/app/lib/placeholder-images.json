@@ -1,0 +1,11 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "crypto-bg",
+      "description": "Abstract digital crypto patterns",
+      "imageUrl": "https://picsum.photos/seed/crypto1/1200/800",
+      "imageHint": "cryptocurrency technology"
+    }
+  ]
+}

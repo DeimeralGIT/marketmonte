@@ -1,3 +1,6 @@
+
+import AppContainer from '@/components/MarketMonte/AppContainer';
+
 export default function Home() {
-  return <></>;
+  return <AppContainer />;
 }
