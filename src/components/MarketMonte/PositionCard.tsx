@@ -1,8 +1,10 @@
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Target, ArrowUpRight, ShieldCheck, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Target, ArrowUpRight, ShieldCheck, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getBinanceTradeUrl } from '@/lib/binance';
 
 interface PositionProps {
   entryPrice: number;
@@ -11,6 +13,7 @@ interface PositionProps {
   confidenceScore: number;
   strategyDescription: string;
   rank: number;
+  symbol: string;
 }
 
 export default function PositionCard({ 
@@ -19,12 +22,14 @@ export default function PositionCard({
   predictedROI, 
   confidenceScore, 
   strategyDescription,
-  rank
+  rank,
+  symbol
 }: PositionProps) {
   const isPositive = predictedROI > 0;
+  const binanceUrl = getBinanceTradeUrl(symbol);
 
   return (
-    <Card className="crypto-card-gradient border-border/40 hover:border-accent/40 transition-all duration-300 group">
+    <Card className="crypto-card-gradient border-border/40 hover:border-accent/40 transition-all duration-300 group flex flex-col">
       <CardHeader className="pb-3 flex flex-row items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -51,7 +56,7 @@ export default function PositionCard({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         <div className="grid grid-cols-2 gap-4">
           <div className="p-3 rounded-lg bg-background/40 border border-border/50">
             <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Entry Price</p>
@@ -70,6 +75,18 @@ export default function PositionCard({
           <p className="text-sm text-foreground/80 leading-relaxed italic">
             "{strategyDescription}"
           </p>
+        </div>
+
+        <div className="pt-4 mt-auto">
+          <Button 
+            asChild
+            className="w-full bg-secondary hover:bg-accent hover:text-accent-foreground border border-border/50 group/btn"
+          >
+            <a href={binanceUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+              <ExternalLink className="w-4 h-4" />
+              Trade on Binance
+            </a>
+          </Button>
         </div>
       </CardContent>
     </Card>

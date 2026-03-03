@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { fetchUSDTTradingPairs, BinancePair, fetch24hTicker } from '@/lib/binance';
 import { analyzePairAction } from '@/app/actions/analysis';
 import { GenerateCryptoPositionsOutput } from '@/ai/flows/generate-crypto-positions';
-import { Search, Loader2, Info, BrainCircuit, LayoutGrid } from 'lucide-react';
+import { Search, Loader2, Info, BrainCircuit, LayoutGrid, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -33,7 +33,6 @@ export default function AppContainer() {
     async function init() {
       const p = await fetchUSDTTradingPairs();
       setPairs(p);
-      // Auto-fetch BTC stats on load
       const t = await fetch24hTicker('BTCUSDT');
       setTicker(t);
     }
@@ -70,7 +69,10 @@ export default function AppContainer() {
         <section className="max-w-4xl mx-auto space-y-8">
           
           {/* Controls */}
-          <div className="bg-card p-6 rounded-xl border border-border accent-glow">
+          <div className="bg-card p-6 rounded-xl border border-border accent-glow relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
+              <Sparkles className="w-16 h-16 text-accent" />
+            </div>
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -151,7 +153,7 @@ export default function AppContainer() {
                     Recommended Positions
                   </h3>
                   <p className="text-xs text-muted-foreground italic">
-                    Ranked by Probabilistic ROI
+                    One-click deep links to Binance Trade
                   </p>
                 </div>
 
@@ -161,6 +163,7 @@ export default function AppContainer() {
                       <PositionCard 
                         key={idx}
                         rank={idx + 1}
+                        symbol={selectedPair}
                         {...pos}
                       />
                     ))}

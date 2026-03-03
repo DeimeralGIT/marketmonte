@@ -65,3 +65,16 @@ export async function fetch24hTicker(symbol: string) {
     return null;
   }
 }
+
+/**
+ * Generates a Binance deep-link URL for a specific trading pair.
+ * Formats standard symbols like BTCUSDT to Binance-friendly BTC_USDT for the URL path.
+ */
+export function getBinanceTradeUrl(symbol: string): string {
+  // Binance trade URLs usually prefer symbols in base_quote format for redirects
+  // though many direct symbols work too.
+  const formattedSymbol = symbol.endsWith('USDT') 
+    ? `${symbol.replace('USDT', '')}_USDT` 
+    : symbol;
+  return `https://www.binance.com/en/trade/${formattedSymbol}?type=spot`;
+}

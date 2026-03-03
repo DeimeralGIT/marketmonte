@@ -1,7 +1,11 @@
 
-import { TrendingUp, Activity } from 'lucide-react';
+import { TrendingUp, Activity, Wallet, UserCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function Header() {
+  const [isConnected, setIsConnected] = useState(false);
+
   return (
     <header className="border-b border-border/50 bg-background/50 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -19,15 +23,33 @@ export default function Header() {
           </div>
         </div>
         
-        <div className="hidden md:flex items-center gap-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Activity className="w-4 h-4 text-accent" />
-            <span>Binance Live Feed</span>
+        <div className="flex items-center gap-4 md:gap-8">
+          <div className="hidden md:flex items-center gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Activity className="w-4 h-4 text-accent" />
+              <span>Binance Live Feed</span>
+            </div>
+            <div className="h-4 w-px bg-border"></div>
           </div>
-          <div className="h-4 w-px bg-border"></div>
-          <div className="text-xs font-medium px-2 py-1 rounded bg-secondary text-secondary-foreground border border-border">
-            USDT PAIRS ONLY
-          </div>
+
+          <Button 
+            variant={isConnected ? "outline" : "default"}
+            size="sm"
+            className={isConnected ? "border-accent/50 text-accent" : "bg-accent hover:bg-accent/90 text-accent-foreground"}
+            onClick={() => setIsConnected(!isConnected)}
+          >
+            {isConnected ? (
+              <>
+                <UserCircle className="w-4 h-4 mr-2" />
+                API Connected
+              </>
+            ) : (
+              <>
+                <Wallet className="w-4 h-4 mr-2" />
+                Connect API
+              </>
+            )}
+          </Button>
         </div>
       </div>
     </header>
