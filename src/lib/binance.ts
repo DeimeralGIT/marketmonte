@@ -35,6 +35,23 @@ export async function fetchUSDTTradingPairs(): Promise<BinancePair[]> {
   }
 }
 
+export async function fetchTopUSDTByVolume(limit = 10): Promise<string[]> {
+  try {
+    const response = await fetch(`${BINANCE_BASE_URL}/ticker/24hr`);
+    if (!response.ok) throw new Error('Failed to fetch ticker data');
+    const data = await response.json();
+    
+    return data
+      .filter((t: any) => t.symbol.endsWith('USDT'))
+      .sort((a: any, b: any) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+      .slice(0, limit)
+      .map((t: any) => t.symbol);
+  } catch (error) {
+    console.error('Error fetching top volume pairs:', error);
+    return [];
+  }
+}
+
 export async function fetchHistoricalKlines(symbol: string, limit = 100): Promise<KlineData[]> {
   try {
     const response = await fetch(`${BINANCE_BASE_URL}/klines?symbol=${symbol}&interval=1h&limit=${limit}`);
@@ -72,7 +89,6 @@ export async function fetch24hTicker(symbol: string) {
  */
 export function getBinanceTradeUrl(symbol: string): string {
   // Binance trade URLs usually prefer symbols in base_quote format for redirects
-  // though many direct symbols work too.
   const formattedSymbol = symbol.endsWith('USDT') 
     ? `${symbol.replace('USDT', '')}_USDT` 
     : symbol;
