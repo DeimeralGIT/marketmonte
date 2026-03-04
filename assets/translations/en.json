@@ -39,11 +39,27 @@
         "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
         "outlook": "Outlook: {symbol}",
         "recommendedPositions": "Recommended Positions",
-        "analysisError": "Analysis Error"
+        "analysisError": "Analysis Error",
+        "bullish": "bullish",
+        "bearish": "bearish",
+        "summaryTemplate": "Hybrid Engine (Student-t HMM + PF + State-Space MC, {horizon} horizon, {paths} paths): {symbol} detected in {regime} regime ({confidence}% confidence, stability {stability}/100, entropy {entropy}%). Outlook is {trend} with regime-adjusted annualised vol {annVol}%. Median price ${median} (P25: ${p25}, P75: ${p75}). Skew {skew}, kurt {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservative): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%. Stability {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (aggressive): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Low-Vol",
+        "regimeTrendingShort": "Trending",
+        "regimeHighVolShort": "High-Vol",
+        "dirLong": "LONG",
+        "dirShort": "SHORT",
+        "limitBuy": "limit buy",
+        "limitSell": "limit sell",
+        "below": "below",
+        "above": "above"
     },
     "leaderboard": {
         "globalScan": "Global Market Leaders Scan",
-        "topAlpha": "Top Alpha Opportunities"
+        "topAlpha": "Top Alpha Opportunities",
+        "reasoningTemplate": "Regime-adaptive pick: {regime} regime detected (stability {stability}/100, entropy {entropy}%). {direction} position. Student-t HMM + PF engine, {paths} paths over {horizon}. EV: ${ev}.",
+        "globalOutlookTemplate": "Hybrid regime-aware scan ({horizon} horizon): Student-t HMM + PF + State-Space MC across {pairsCount} high-volume pairs. Market regime distribution: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leaders ranked by entropy-penalized expected value."
     },
     "position": {
         "long": "LONG",
@@ -70,7 +86,9 @@
         "exitTarget": "Exit target",
         "roiTarget": "ROI target",
         "skip": "Skip",
-        "addReminder": "Add Reminder"
+        "addReminder": "Add Reminder",
+        "calendarTitle": "Close {asset} position – target ${price}",
+        "calendarDetails": "MarketMonte position reminder\n\nPair: {symbol}\nEntry: ${entry}\nExit target: ${exit}\nROI target: {roi}\nConfidence: {confidence}%\n\nStrategy: {strategy}"
     },
     "empty": {
         "readyTitle": "Ready for analysis",
@@ -100,6 +118,11 @@
         "exchange": "Exchange",
         "language": "Language",
         "darkMode": "Dark Mode",
-        "lightMode": "Light Mode"
+        "lightMode": "Light Mode",
+        "versionFooter": "Market Monte v1.0.0 by Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "No historical data available for {symbol}",
+        "failedFetchSymbols": "Failed to fetch top market symbols"
     }
 }

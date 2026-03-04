@@ -39,11 +39,27 @@
         "engineLabel": "Student-t HMM (Baum-Welch) + Filtro Particellare (500) + MC Spazio degli Stati",
         "outlook": "Prospettiva: {symbol}",
         "recommendedPositions": "Posizioni Raccomandate",
-        "analysisError": "Errore di Analisi"
+        "analysisError": "Errore di Analisi",
+        "bullish": "rialzista",
+        "bearish": "ribassista",
+        "summaryTemplate": "Motore ibrido (Student-t HMM + PF + State-Space MC, orizzonte {horizon}, {paths} traiettorie): {symbol} rilevato in regime {regime} ({confidence}% fiducia, stabilità {stability}/100, entropia {entropy}%). Prospettiva {trend} con vol annualizzata adattata al regime {annVol}%. Prezzo mediano ${median} (P25: ${p25}, P75: ${p75}). Asimmetria {skew}, curtosi {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservativa): {orderType} {discount}% {side} del mercato. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Stabilità {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (aggressiva): {orderType} {discount}% {side} del mercato. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Vol Bassa",
+        "regimeTrendingShort": "Tendenza",
+        "regimeHighVolShort": "Vol Alta",
+        "dirLong": "LONG",
+        "dirShort": "SHORT",
+        "limitBuy": "acquisto limitato",
+        "limitSell": "vendita limitata",
+        "below": "sotto",
+        "above": "sopra"
     },
     "leaderboard": {
         "globalScan": "Scansione Globale Leader di Mercato",
-        "topAlpha": "Migliori Opportunità Alpha"
+        "topAlpha": "Migliori Opportunità Alpha",
+        "reasoningTemplate": "Selezione adattiva al regime: regime {regime} rilevato (stabilità {stability}/100, entropia {entropy}%). Posizione {direction}. Student-t HMM + PF, {paths} traiettorie in {horizon}. EV: ${ev}.",
+        "globalOutlookTemplate": "Scansione ibrida adattiva al regime (orizzonte {horizon}): Student-t HMM + PF + State-Space MC su {pairsCount} coppie ad alto volume. Distribuzione dei regimi: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leader classificati per valore atteso penalizzato dall'entropia."
     },
     "position": {
         "long": "LONG",
@@ -70,7 +86,9 @@
         "exitTarget": "Obiettivo di uscita",
         "roiTarget": "Obiettivo ROI",
         "skip": "Salta",
-        "addReminder": "Aggiungi Promemoria"
+        "addReminder": "Aggiungi Promemoria",
+        "calendarTitle": "Chiudi posizione {asset} – obiettivo ${price}",
+        "calendarDetails": "Promemoria MarketMonte\n\nCoppia: {symbol}\nEntrata: ${entry}\nObiettivo di uscita: ${exit}\nObiettivo ROI: {roi}\nFiducia: {confidence}%\n\nStrategia: {strategy}"
     },
     "empty": {
         "readyTitle": "Pronto per l'analisi",
@@ -100,6 +118,11 @@
         "exchange": "Exchange",
         "language": "Lingua",
         "darkMode": "Modalità Scura",
-        "lightMode": "Modalità Chiara"
+        "lightMode": "Modalità Chiara",
+        "versionFooter": "Market Monte v1.0.0 di Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "Nessun dato storico disponibile per {symbol}",
+        "failedFetchSymbols": "Impossibile recuperare i principali simboli del mercato"
     }
 }

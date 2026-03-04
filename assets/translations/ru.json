@@ -39,11 +39,27 @@
         "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
         "outlook": "Прогноз: {symbol}",
         "recommendedPositions": "Рекомендованные позиции",
-        "analysisError": "Ошибка анализа"
+        "analysisError": "Ошибка анализа",
+        "bullish": "бычий",
+        "bearish": "медвежий",
+        "summaryTemplate": "Гибридный движок (Student-t HMM + PF + State-Space MC, горизонт {horizon}, {paths} путей): {symbol} обнаружен в режиме {regime} ({confidence}% уверенность, стабильность {stability}/100, энтропия {entropy}%). Прогноз {trend} с режим-скорректированной годовой волатильностью {annVol}%. Медианная цена ${median} (P25: ${p25}, P75: ${p75}). Асимметрия {skew}, эксцесс {kurt}.",
+        "strategyConservative": "{regime} {direction} (консервативная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%. Стабильность {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (агрессивная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Низ-Вол",
+        "regimeTrendingShort": "Тренд",
+        "regimeHighVolShort": "Выс-Вол",
+        "dirLong": "ЛОНГ",
+        "dirShort": "ШОРТ",
+        "limitBuy": "лимитная покупка",
+        "limitSell": "лимитная продажа",
+        "below": "ниже",
+        "above": "выше"
     },
     "leaderboard": {
         "globalScan": "Глобальное сканирование лидеров рынка",
-        "topAlpha": "Лучшие альфа-возможности"
+        "topAlpha": "Лучшие альфа-возможности",
+        "reasoningTemplate": "Режим-адаптивный выбор: обнаружен режим {regime} (стабильность {stability}/100, энтропия {entropy}%). Позиция {direction}. Student-t HMM + PF, {paths} путей за {horizon}. EV: ${ev}.",
+        "globalOutlookTemplate": "Гибридное режим-осведомлённое сканирование (горизонт {horizon}): Student-t HMM + PF + State-Space MC по {pairsCount} высокообъёмным парам. Распределение режимов: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Лидеры ранжированы по энтропия-штрафованному ожидаемому значению."
     },
     "position": {
         "long": "ЛОНГ",
@@ -70,7 +86,9 @@
         "exitTarget": "Цель выхода",
         "roiTarget": "Цель ROI",
         "skip": "Пропустить",
-        "addReminder": "Напоминание"
+        "addReminder": "Напоминание",
+        "calendarTitle": "Закрыть позицию {asset} – цель ${price}",
+        "calendarDetails": "Напоминание MarketMonte\n\nПара: {symbol}\nВход: ${entry}\nЦель выхода: ${exit}\nЦель ROI: {roi}\nУверенность: {confidence}%\n\nСтратегия: {strategy}"
     },
     "empty": {
         "readyTitle": "Готов к анализу",
@@ -100,6 +118,11 @@
         "exchange": "Биржа",
         "language": "Язык",
         "darkMode": "Тёмная тема",
-        "lightMode": "Светлая тема"
+        "lightMode": "Светлая тема",
+        "versionFooter": "Market Monte v1.0.0 от Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "Нет исторических данных для {symbol}",
+        "failedFetchSymbols": "Не удалось получить топ символы рынка"
     }
 }

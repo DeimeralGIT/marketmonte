@@ -38,7 +38,7 @@ class MarketMonteApp extends ConsumerWidget {
     AppColors.apply(dark: isDark);
 
     return MaterialApp(
-      title: 'Market Monte',
+      title: tr('app.title'),
       debugShowCheckedModeBanner: false,
       theme: isDark ? AppTheme.darkTheme : AppTheme.lightTheme,
       localizationsDelegates: context.localizationDelegates,

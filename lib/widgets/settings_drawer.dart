@@ -121,7 +121,7 @@ class SettingsDrawer extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
               child: Text(
-                'Market Monte v1.0.0 by Deimeral',
+                tr('settings.versionFooter'),
                 style: TextStyle(
                   fontSize: 11,
                   color: AppColors.mutedForeground,

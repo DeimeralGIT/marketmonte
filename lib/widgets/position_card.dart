@@ -646,16 +646,23 @@ class PositionCard extends ConsumerWidget {
   Future<void> _openCalendarEvent(DateTime closeTime) async {
     final baseAsset = symbol.replaceAll('USDT', '');
     final title = Uri.encodeComponent(
-      'Close $baseAsset position – target \$${formatPrice(exitPrice)}',
+      tr(
+        'reminder.calendarTitle',
+        namedArgs: {'asset': baseAsset, 'price': formatPrice(exitPrice)},
+      ),
     );
     final details = Uri.encodeComponent(
-      'MarketMonte position reminder\n\n'
-      'Pair: $symbol\n'
-      'Entry: \$${formatPrice(entryPrice)}\n'
-      'Exit target: \$${formatPrice(exitPrice)}\n'
-      'ROI target: ${formatROI(predictedROI)}\n'
-      'Confidence: $confidenceScore%\n\n'
-      'Strategy: $strategyDescription',
+      tr(
+        'reminder.calendarDetails',
+        namedArgs: {
+          'symbol': symbol,
+          'entry': formatPrice(entryPrice),
+          'exit': formatPrice(exitPrice),
+          'roi': formatROI(predictedROI),
+          'confidence': confidenceScore.toString(),
+          'strategy': strategyDescription,
+        },
+      ),
     );
 
     // Google Calendar expects dates in UTC as yyyyMMddTHHmmssZ
