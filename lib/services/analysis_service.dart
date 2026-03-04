@@ -17,11 +17,11 @@ class AnalysisService {
 
   static const int _numSim = 10000;
 
-  /// Regime display names (indexed by state: 0=low, 1=med, 2=high).
-  static List<String> get _regimeNames => [
-    tr('analysis.regimeLowVolShort'),
-    tr('analysis.regimeTrendingShort'),
-    tr('analysis.regimeHighVolShort'),
+  /// Regime display-name translation keys (indexed by state: 0=low, 1=med, 2=high).
+  static const List<String> _regimeNameKeys = [
+    'analysis.regimeLowVolShort',
+    'analysis.regimeTrendingShort',
+    'analysis.regimeHighVolShort',
   ];
 
   /// Transaction cost per round-trip (2 × 0.1% taker fee).
@@ -209,10 +209,10 @@ class AnalysisService {
     }
 
     // ── 10. Build summary ──
-    final trendLabel = (p50 > currentPrice)
-        ? tr('analysis.bullish')
-        : tr('analysis.bearish');
-    final regimeLabel = VolatilityRegime.values[currentRegime].label;
+    final trendKey = (p50 > currentPrice)
+        ? 'analysis.bullish'
+        : 'analysis.bearish';
+    final regimeNameKey = _regimeNameKeys[currentRegime];
     final regimeProbPct = (regimeProbs[currentRegime] * 100).toStringAsFixed(0);
     final currentAnnVol = regimeAnnVols[currentRegime].toStringAsFixed(1);
     final entropyPct = (regimeEntropy / log(3) * 100).toStringAsFixed(0);
@@ -221,17 +221,15 @@ class AnalysisService {
       positions: positions,
       regimeInfo: regimeInfo,
       distributionStats: distStats,
-      analysisSummary: tr(
-        'analysis.summaryTemplate',
+      analysisSummary: TranslatableString(
+        key: 'analysis.summaryTemplate',
         namedArgs: {
           'horizon': period.displayName,
           'paths': _numSim.toString(),
           'symbol': symbol,
-          'regime': regimeLabel,
           'confidence': regimeProbPct,
           'stability': stabilityScore.toString(),
           'entropy': entropyPct,
-          'trend': trendLabel,
           'annVol': currentAnnVol,
           'median': p50.toStringAsFixed(2),
           'p25': p25.toStringAsFixed(2),
@@ -239,6 +237,7 @@ class AnalysisService {
           'skew': skewness.toStringAsFixed(2),
           'kurt': kurtosis.toStringAsFixed(2),
         },
+        translatableArgs: {'trend': trendKey, 'regime': regimeNameKey},
       ),
     );
   }
@@ -257,7 +256,7 @@ class AnalysisService {
     required int stabilityScore,
     required double regimeEntropy,
   }) {
-    final regimeName = _regimeNames[currentRegime];
+    final regimeNameKey = _regimeNameKeys[currentRegime];
     final isBullish = distStats.p50 >= currentPrice;
     final periodScale = sqrt(period.hours / 24.0).clamp(0.25, 3.0);
 
@@ -286,7 +285,7 @@ class AnalysisService {
         direction: TradeDirection.long,
         currentPrice: currentPrice,
         currentRegime: currentRegime,
-        regimeName: regimeName,
+        regimeNameKey: regimeNameKey,
         pathResults: pathResults,
         distStats: distStats,
         consBase: consBase,
@@ -305,7 +304,7 @@ class AnalysisService {
         direction: TradeDirection.short,
         currentPrice: currentPrice,
         currentRegime: currentRegime,
-        regimeName: regimeName,
+        regimeNameKey: regimeNameKey,
         pathResults: pathResults,
         distStats: distStats,
         consBase: consBase,
@@ -326,7 +325,7 @@ class AnalysisService {
           direction: isBullish ? TradeDirection.long : TradeDirection.short,
           currentPrice: currentPrice,
           currentRegime: currentRegime,
-          regimeName: regimeName,
+          regimeNameKey: regimeNameKey,
           pathResults: pathResults,
           distStats: distStats,
           consBase: consBase,
@@ -347,7 +346,7 @@ class AnalysisService {
     required TradeDirection direction,
     required double currentPrice,
     required int currentRegime,
-    required String regimeName,
+    required String regimeNameKey,
     required List<PathResult> pathResults,
     required DistributionStats distStats,
     required double consBase,
@@ -489,44 +488,46 @@ class AnalysisService {
     final aggConf = (aggTpProb * 100).round().clamp(5, 95);
 
     // ── Strategy descriptions ──
-    final dirLabel = isLong ? tr('analysis.dirLong') : tr('analysis.dirShort');
+    final dirKey = isLong ? 'analysis.dirLong' : 'analysis.dirShort';
+    final orderTypeKey = isLong ? 'analysis.limitBuy' : 'analysis.limitSell';
+    final sideKey = isLong ? 'analysis.below' : 'analysis.above';
     final consDiscPct = ((consEntry - currentPrice).abs() / currentPrice * 100)
         .toStringAsFixed(2);
     final aggDiscPct = ((aggEntry - currentPrice).abs() / currentPrice * 100)
         .toStringAsFixed(2);
 
-    final consDesc = tr(
-      'analysis.strategyConservative',
+    final consDesc = TranslatableString(
+      key: 'analysis.strategyConservative',
       namedArgs: {
-        'regime': regimeName,
-        'direction': dirLabel,
-        'orderType': isLong
-            ? tr('analysis.limitBuy')
-            : tr('analysis.limitSell'),
         'discount': consDiscPct,
-        'side': isLong ? tr('analysis.below') : tr('analysis.above'),
         'tpProb': (consTpProb * 100).toStringAsFixed(1),
         'slProb': (consSlProb * 100).toStringAsFixed(1),
         'ev': consEVAdj.toStringAsFixed(2),
         'kelly': (consKelly * 100).toStringAsFixed(1),
         'stability': stabilityScore.toString(),
       },
+      translatableArgs: {
+        'regime': regimeNameKey,
+        'direction': dirKey,
+        'orderType': orderTypeKey,
+        'side': sideKey,
+      },
     );
 
-    final aggDesc = tr(
-      'analysis.strategyAggressive',
+    final aggDesc = TranslatableString(
+      key: 'analysis.strategyAggressive',
       namedArgs: {
-        'regime': regimeName,
-        'direction': dirLabel,
-        'orderType': isLong
-            ? tr('analysis.limitBuy')
-            : tr('analysis.limitSell'),
         'discount': aggDiscPct,
-        'side': isLong ? tr('analysis.below') : tr('analysis.above'),
         'tpProb': (aggTpProb * 100).toStringAsFixed(1),
         'slProb': (aggSlProb * 100).toStringAsFixed(1),
         'ev': aggEVAdj.toStringAsFixed(2),
         'kelly': (aggKelly * 100).toStringAsFixed(1),
+      },
+      translatableArgs: {
+        'regime': regimeNameKey,
+        'direction': dirKey,
+        'orderType': orderTypeKey,
+        'side': sideKey,
       },
     );
 
@@ -598,7 +599,7 @@ class AnalysisService {
     final isLong = isBullish;
     final direction = isLong ? TradeDirection.long : TradeDirection.short;
     final periodScale = sqrt(period.hours / 24.0).clamp(0.25, 3.0);
-    final regimeName = _regimeNames[currentRegime];
+    final regimeNameKey = _regimeNameKeys[currentRegime];
 
     // ── Ludomania base discounts (1.8× the aggressive base) ──
     late final double ludoBase;
@@ -666,21 +667,24 @@ class AnalysisService {
     final conf = (tpProb * 100).round().clamp(5, 95);
 
     // ── Strategy description ──
-    final dirLabel = isLong ? tr('analysis.dirLong') : tr('analysis.dirShort');
+    final dirKey = isLong ? 'analysis.dirLong' : 'analysis.dirShort';
+    final sideKey = isLong ? 'analysis.below' : 'analysis.above';
     final discPct = ((entry - currentPrice).abs() / currentPrice * 100)
         .toStringAsFixed(2);
 
-    final desc = tr(
-      'analysis.strategyLudomania',
+    final desc = TranslatableString(
+      key: 'analysis.strategyLudomania',
       namedArgs: {
-        'regime': regimeName,
-        'direction': dirLabel,
         'discount': discPct,
-        'side': isLong ? tr('analysis.below') : tr('analysis.above'),
         'tpProb': (tpProb * 100).toStringAsFixed(1),
         'slProb': (slProb * 100).toStringAsFixed(1),
         'ev': evAdj.toStringAsFixed(2),
         'kelly': (kelly * 100).toStringAsFixed(1),
+      },
+      translatableArgs: {
+        'regime': regimeNameKey,
+        'direction': dirKey,
+        'side': sideKey,
       },
     );
 
@@ -780,7 +784,12 @@ class AnalysisService {
     final top3 = analyzedPairs.take(3).toList();
 
     final topPicks = top3.map((p) {
-      final regLabel = p.regimeInfo?.currentRegime.label ?? 'Unknown';
+      final regimeNameKey = p.regimeInfo != null
+          ? _regimeNameKeys[p.regimeInfo!.currentRegime.index]
+          : 'analysis.regimeTrendingShort';
+      final dirKey = p.topPosition.direction == TradeDirection.long
+          ? 'analysis.dirLong'
+          : 'analysis.dirShort';
       final stability = p.regimeInfo?.stabilityScore ?? 0;
       final entropyPct = p.regimeInfo != null
           ? (p.regimeInfo!.regimeEntropy / maxEntropy * 100).toStringAsFixed(0)
@@ -794,17 +803,16 @@ class AnalysisService {
         predictedROI: p.topPosition.predictedROI,
         confidenceScore: p.topPosition.confidenceScore,
         expectedValue: p.topPosition.expectedValue,
-        reasoning: tr(
-          'leaderboard.reasoningTemplate',
+        reasoning: TranslatableString(
+          key: 'leaderboard.reasoningTemplate',
           namedArgs: {
-            'regime': regLabel,
             'stability': stability.toString(),
             'entropy': entropyPct,
-            'direction': p.topPosition.direction.label,
             'paths': _numSim.toString(),
             'horizon': period.displayName,
             'ev': p.topPosition.expectedValue.toStringAsFixed(2),
           },
+          translatableArgs: {'regime': regimeNameKey, 'direction': dirKey},
         ),
       );
     }).toList();
@@ -826,18 +834,21 @@ class AnalysisService {
 
     return MarketLeaderboardResult(
       topPicks: topPicks,
-      globalOutlook: tr(
-        'leaderboard.globalOutlookTemplate',
+      globalOutlook: TranslatableString(
+        key: 'leaderboard.globalOutlookTemplate',
         namedArgs: {
           'horizon': period.displayName,
           'pairsCount': analyzedPairs.length.toString(),
           'lowCount': lowCount.toString(),
-          'lowVolLabel': tr('analysis.regimeLowVolShort').toLowerCase(),
           'medCount': medCount.toString(),
-          'trendingLabel': tr('analysis.regimeTrendingShort').toLowerCase(),
           'highCount': highCount.toString(),
-          'highVolLabel': tr('analysis.regimeHighVolShort').toLowerCase(),
         },
+        translatableArgs: {
+          'lowVolLabel': 'analysis.regimeLowVolShort',
+          'trendingLabel': 'analysis.regimeTrendingShort',
+          'highVolLabel': 'analysis.regimeHighVolShort',
+        },
+        lowercaseArgs: {'lowVolLabel', 'trendingLabel', 'highVolLabel'},
       ),
     );
   }

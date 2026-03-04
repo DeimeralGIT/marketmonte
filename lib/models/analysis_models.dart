@@ -1,3 +1,60 @@
+import 'package:easy_localization/easy_localization.dart';
+
+/// A string whose translation is deferred to render-time so that
+/// locale changes are reflected immediately without re-running analysis.
+class TranslatableString {
+  final String key;
+  final Map<String, String> namedArgs;
+
+  /// Args whose values are themselves translation keys.
+  /// At translate-time each value is run through `tr()` before being
+  /// merged into [namedArgs].
+  final Map<String, String> translatableArgs;
+
+  /// Subset of [translatableArgs] whose translated result should be
+  /// lower-cased (e.g. regime labels inside a sentence).
+  final Set<String> lowercaseArgs;
+
+  const TranslatableString({
+    required this.key,
+    this.namedArgs = const {},
+    this.translatableArgs = const {},
+    this.lowercaseArgs = const {},
+  });
+
+  /// Produce the final user-visible string in the **current** locale.
+  String translate() {
+    final allArgs = Map<String, String>.from(namedArgs);
+    for (final entry in translatableArgs.entries) {
+      String val = tr(entry.value);
+      if (lowercaseArgs.contains(entry.key)) val = val.toLowerCase();
+      allArgs[entry.key] = val;
+    }
+    return tr(key, namedArgs: allArgs);
+  }
+
+  Map<String, dynamic> toJson() => {
+    'key': key,
+    'namedArgs': namedArgs,
+    'translatableArgs': translatableArgs,
+    'lowercaseArgs': lowercaseArgs.toList(),
+  };
+
+  factory TranslatableString.fromJson(Map<String, dynamic> json) {
+    return TranslatableString(
+      key: json['key'] as String,
+      namedArgs: Map<String, String>.from(json['namedArgs'] as Map? ?? {}),
+      translatableArgs: Map<String, String>.from(
+        json['translatableArgs'] as Map? ?? {},
+      ),
+      lowercaseArgs: Set<String>.from(json['lowercaseArgs'] as List? ?? []),
+    );
+  }
+
+  @override
+  String toString() => translate();
+}
+
 /// Investment time horizon for projection.
 enum TimePeriod {
   oneHour('1H', 1, '1 Hour'),
@@ -153,7 +210,7 @@ class TradingPosition {
   final double slProbability;
   final double expectedValue;
   final double positionSizePct;
-  final String strategyDescription;
+  final TranslatableString strategyDescription;
   final bool isLudomania;
 
   TradingPosition({
@@ -183,7 +240,9 @@ class TradingPosition {
       slProbability: (json['slProbability'] as num?)?.toDouble() ?? 0.0,
       expectedValue: (json['expectedValue'] as num?)?.toDouble() ?? 0.0,
       positionSizePct: (json['positionSizePct'] as num?)?.toDouble() ?? 0.0,
-      strategyDescription: json['strategyDescription'] as String,
+      strategyDescription: TranslatableString.fromJson(
+        json['strategyDescription'] as Map<String, dynamic>,
+      ),
       isLudomania: json['isLudomania'] as bool? ?? false,
     );
   }
@@ -199,14 +258,14 @@ class TradingPosition {
     'slProbability': slProbability,
     'expectedValue': expectedValue,
     'positionSizePct': positionSizePct,
-    'strategyDescription': strategyDescription,
+    'strategyDescription': strategyDescription.toJson(),
     'isLudomania': isLudomania,
   };
 }
 
 class CryptoAnalysisResult {
   final List<TradingPosition> positions;
-  final String analysisSummary;
+  final TranslatableString analysisSummary;
   final RegimeInfo? regimeInfo;
   final DistributionStats? distributionStats;
 
@@ -222,7 +281,9 @@ class CryptoAnalysisResult {
       positions: (json['positions'] as List)
           .map((p) => TradingPosition.fromJson(p as Map<String, dynamic>))
           .toList(),
-      analysisSummary: json['analysisSummary'] as String,
+      analysisSummary: TranslatableString.fromJson(
+        json['analysisSummary'] as Map<String, dynamic>,
+      ),
       regimeInfo: json['regimeInfo'] != null
           ? RegimeInfo.fromJson(json['regimeInfo'] as Map<String, dynamic>)
           : null,
@@ -231,7 +292,7 @@ class CryptoAnalysisResult {
 
   Map<String, dynamic> toJson() => {
     'positions': positions.map((p) => p.toJson()).toList(),
-    'analysisSummary': analysisSummary,
+    'analysisSummary': analysisSummary.toJson(),
     if (regimeInfo != null) 'regimeInfo': regimeInfo!.toJson(),
     if (distributionStats != null)
       'distributionStats': distributionStats!.toJson(),
@@ -247,7 +308,7 @@ class LeadPosition {
   final double predictedROI;
   final int confidenceScore;
   final double expectedValue;
-  final String reasoning;
+  final TranslatableString reasoning;
 
   LeadPosition({
     required this.symbol,
@@ -271,7 +332,9 @@ class LeadPosition {
       predictedROI: (json['predictedROI'] as num).toDouble(),
       confidenceScore: json['confidenceScore'] as int,
       expectedValue: (json['expectedValue'] as num?)?.toDouble() ?? 0.0,
-      reasoning: json['reasoning'] as String,
+      reasoning: TranslatableString.fromJson(
+        json['reasoning'] as Map<String, dynamic>,
+      ),
     );
   }
 
@@ -284,13 +347,13 @@ class LeadPosition {
     'predictedROI': predictedROI,
     'confidenceScore': confidenceScore,
     'expectedValue': expectedValue,
-    'reasoning': reasoning,
+    'reasoning': reasoning.toJson(),
   };
 }
 
 class MarketLeaderboardResult {
   final List<LeadPosition> topPicks;
-  final String globalOutlook;
+  final TranslatableString globalOutlook;
 
   MarketLeaderboardResult({
     required this.topPicks,
@@ -302,12 +365,14 @@ class MarketLeaderboardResult {
       topPicks: (json['topPicks'] as List)
           .map((p) => LeadPosition.fromJson(p as Map<String, dynamic>))
           .toList(),
-      globalOutlook: json['globalOutlook'] as String,
+      globalOutlook: TranslatableString.fromJson(
+        json['globalOutlook'] as Map<String, dynamic>,
+      ),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'topPicks': topPicks.map((p) => p.toJson()).toList(),
-    'globalOutlook': globalOutlook,
+    'globalOutlook': globalOutlook.toJson(),
   };
 }
