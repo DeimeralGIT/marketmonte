@@ -128,10 +128,13 @@ class LeaderboardSection extends StatelessWidget {
       symbol: pick.symbol,
       investmentAmount: investmentAmount,
       timePeriod: timePeriod,
+      direction: pick.direction,
       entryPrice: pick.entryPrice,
       exitPrice: pick.exitPrice,
+      stopLoss: pick.stopLoss,
       predictedROI: pick.predictedROI,
       confidenceScore: pick.confidenceScore,
+      expectedValue: pick.expectedValue,
       strategyDescription: pick.reasoning,
     );
   }

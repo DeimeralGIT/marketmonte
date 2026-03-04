@@ -7,11 +7,7 @@ class PairStats extends StatelessWidget {
   final Map<String, dynamic> ticker;
   final String symbol;
 
-  const PairStats({
-    super.key,
-    required this.ticker,
-    required this.symbol,
-  });
+  const PairStats({super.key, required this.ticker, required this.symbol});
 
   @override
   Widget build(BuildContext context) {
@@ -29,114 +25,215 @@ class PairStats extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _StatCard(
-              label: 'Price',
-              value: '\$${formatPrice(lastPrice)}',
-              icon: LucideIcons.lineChart,
-              iconColor: AppColors.accent,
-              subtitle:
-                  '${isUp ? '▲' : '▼'} ${priceChangePercent.toStringAsFixed(2)}% (24h)',
-              subtitleColor:
-                  isUp ? const Color(0xFF4ADE80) : const Color(0xFFF87171),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Main price hero ──
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.secondary.withValues(alpha: 0.5),
+                  AppColors.secondary.withValues(alpha: 0.2),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.5),
+              ),
             ),
-            const SizedBox(width: 12),
-            _StatCard(
-              label: '24h High',
-              value: '\$${formatPrice(highPrice)}',
-              icon: LucideIcons.barChart3,
-              iconColor: AppColors.mutedForeground,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    LucideIcons.lineChart,
+                    size: 20,
+                    color: AppColors.accent,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'CURRENT PRICE',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '\$${formatPrice(lastPrice)}',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            color: AppColors.foreground,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        (isUp
+                                ? const Color(0xFF4ADE80)
+                                : const Color(0xFFF87171))
+                            .withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color:
+                          (isUp
+                                  ? const Color(0xFF4ADE80)
+                                  : const Color(0xFFF87171))
+                              .withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isUp
+                            ? LucideIcons.trendingUp
+                            : LucideIcons.trendingDown,
+                        size: 14,
+                        color: isUp
+                            ? const Color(0xFF4ADE80)
+                            : const Color(0xFFF87171),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${isUp ? '+' : ''}${priceChangePercent.toStringAsFixed(2)}%',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'monospace',
+                          color: isUp
+                              ? const Color(0xFF4ADE80)
+                              : const Color(0xFFF87171),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            _StatCard(
-              label: '24h Low',
-              value: '\$${formatPrice(lowPrice)}',
-              icon: LucideIcons.barChart3,
-              iconColor: AppColors.mutedForeground,
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── 24h stats row: scrollable chips ──
+          SizedBox(
+            height: 56,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                _StatChip(
+                  icon: LucideIcons.arrowUp,
+                  iconColor: const Color(0xFF4ADE80),
+                  label: '24h High',
+                  value: '\$${formatPrice(highPrice)}',
+                ),
+                const SizedBox(width: 8),
+                _StatChip(
+                  icon: LucideIcons.arrowDown,
+                  iconColor: const Color(0xFFF87171),
+                  label: '24h Low',
+                  value: '\$${formatPrice(lowPrice)}',
+                ),
+                const SizedBox(width: 8),
+                _StatChip(
+                  icon: LucideIcons.barChart3,
+                  iconColor: AppColors.accent,
+                  label: 'Volume',
+                  value: '${formatVolume(volume)} $baseAsset',
+                ),
+                // Trailing space so last chip doesn't hug the edge
+                const SizedBox(width: 4),
+              ],
             ),
-            const SizedBox(width: 12),
-            _StatCard(
-              label: 'Volume',
-              value: '${formatVolume(volume)} $baseAsset',
-              icon: LucideIcons.refreshCw,
-              iconColor: AppColors.mutedForeground,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
+class _StatChip extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
-  final String? subtitle;
-  final Color? subtitleColor;
+  final String label;
+  final String value;
 
-  const _StatCard({
-    required this.label,
-    required this.value,
+  const _StatChip({
     required this.icon,
     required this.iconColor,
-    this.subtitle,
-    this.subtitleColor,
+    required this.label,
+    required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 180,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.secondary.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        color: AppColors.secondary.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Icon(icon, size: 14, color: iconColor),
+          const SizedBox(width: 8),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 label.toUpperCase(),
                 style: const TextStyle(
-                  fontSize: 10,
+                  fontSize: 8,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
                   color: AppColors.mutedForeground,
                 ),
               ),
-              Icon(icon, size: 16, color: iconColor),
+              const SizedBox(height: 1),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'monospace',
+                  color: AppColors.foreground,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'monospace',
-              color: AppColors.foreground,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              subtitle!,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: subtitleColor ?? AppColors.mutedForeground,
-              ),
-            ),
-          ],
         ],
       ),
     );

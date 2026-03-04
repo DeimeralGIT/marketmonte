@@ -18,12 +18,43 @@ class AnalysisSection extends StatelessWidget {
     required this.timePeriod,
   });
 
+  // Regime colour mapping
+  static Color _regimeColor(VolatilityRegime regime) {
+    switch (regime) {
+      case VolatilityRegime.low:
+        return const Color(0xFF4ADE80); // green
+      case VolatilityRegime.medium:
+        return const Color(0xFFFACC15); // yellow
+      case VolatilityRegime.high:
+        return const Color(0xFFF87171); // red
+    }
+  }
+
+  static IconData _regimeIcon(VolatilityRegime regime) {
+    switch (regime) {
+      case VolatilityRegime.low:
+        return LucideIcons.shieldCheck;
+      case VolatilityRegime.medium:
+        return LucideIcons.trendingUp;
+      case VolatilityRegime.high:
+        return LucideIcons.alertTriangle;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final regime = analysis.regimeInfo;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Outlook card
+        // ── Regime Detection Card ──
+        if (regime != null) ...[
+          _buildRegimeCard(regime),
+          const SizedBox(height: 16),
+        ],
+
+        // ── Outlook card ──
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -120,10 +151,16 @@ class AnalysisSection extends StatelessWidget {
                         symbol: symbol,
                         investmentAmount: investmentAmount,
                         timePeriod: timePeriod,
+                        direction: entry.value.direction,
                         entryPrice: entry.value.entryPrice,
                         exitPrice: entry.value.exitPrice,
+                        stopLoss: entry.value.stopLoss,
                         predictedROI: entry.value.predictedROI,
                         confidenceScore: entry.value.confidenceScore,
+                        tpProbability: entry.value.tpProbability,
+                        slProbability: entry.value.slProbability,
+                        expectedValue: entry.value.expectedValue,
+                        positionSizePct: entry.value.positionSizePct,
                         strategyDescription: entry.value.strategyDescription,
                       ),
                     ),
@@ -142,10 +179,16 @@ class AnalysisSection extends StatelessWidget {
                     symbol: symbol,
                     investmentAmount: investmentAmount,
                     timePeriod: timePeriod,
+                    direction: entry.value.direction,
                     entryPrice: entry.value.entryPrice,
                     exitPrice: entry.value.exitPrice,
+                    stopLoss: entry.value.stopLoss,
                     predictedROI: entry.value.predictedROI,
                     confidenceScore: entry.value.confidenceScore,
+                    tpProbability: entry.value.tpProbability,
+                    slProbability: entry.value.slProbability,
+                    expectedValue: entry.value.expectedValue,
+                    positionSizePct: entry.value.positionSizePct,
                     strategyDescription: entry.value.strategyDescription,
                   ),
                 );
@@ -154,6 +197,235 @@ class AnalysisSection extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+
+  /// Builds the regime detection visualization card.
+  Widget _buildRegimeCard(RegimeInfo regime) {
+    final color = _regimeColor(regime.currentRegime);
+    final icon = _regimeIcon(regime.currentRegime);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title row
+          Row(
+            children: [
+              Icon(icon, size: 18, color: color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Regime Detection: ${regime.currentRegime.label}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
+              // Stability badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: color.withValues(alpha: 0.12),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  'Stability ${regime.stabilityScore}/100',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            regime.currentRegime.description,
+            style: TextStyle(fontSize: 12, color: AppColors.mutedForeground),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Regime probability bars
+          _buildRegimeProbBar(
+            'Low Vol',
+            regime.regimeProbs[0],
+            const Color(0xFF4ADE80),
+            regime.currentRegime == VolatilityRegime.low,
+          ),
+          const SizedBox(height: 8),
+          _buildRegimeProbBar(
+            'Trending',
+            regime.regimeProbs[1],
+            const Color(0xFFFACC15),
+            regime.currentRegime == VolatilityRegime.medium,
+          ),
+          const SizedBox(height: 8),
+          _buildRegimeProbBar(
+            'High Vol',
+            regime.regimeProbs[2],
+            const Color(0xFFF87171),
+            regime.currentRegime == VolatilityRegime.high,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Annualised volatility per regime
+          Row(
+            children: [
+              _buildVolChip(
+                'Low',
+                regime.regimeAnnualisedVols[0],
+                const Color(0xFF4ADE80),
+              ),
+              const SizedBox(width: 8),
+              _buildVolChip(
+                'Med',
+                regime.regimeAnnualisedVols[1],
+                const Color(0xFFFACC15),
+              ),
+              const SizedBox(width: 8),
+              _buildVolChip(
+                'High',
+                regime.regimeAnnualisedVols[2],
+                const Color(0xFFF87171),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // Engine label
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Icon(
+                  LucideIcons.cpu,
+                  size: 12,
+                  color: AppColors.mutedForeground.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.mutedForeground.withValues(alpha: 0.6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRegimeProbBar(
+    String label,
+    double prob,
+    Color color,
+    bool isActive,
+  ) {
+    final pct = (prob * 100).toStringAsFixed(1);
+    return Row(
+      children: [
+        SizedBox(
+          width: 62,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? color : AppColors.mutedForeground,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            height: 14,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(7),
+              color: AppColors.secondary.withValues(alpha: 0.4),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: prob.clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(7),
+                  color: color.withValues(alpha: isActive ? 0.8 : 0.35),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 42,
+          child: Text(
+            '$pct%',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+              color: isActive ? color : AppColors.mutedForeground,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVolChip(String label, double annVol, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: color.withValues(alpha: 0.08),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, color: AppColors.mutedForeground),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${annVol.toStringAsFixed(1)}%',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            Text(
+              'Ann. Vol',
+              style: TextStyle(
+                fontSize: 9,
+                color: AppColors.mutedForeground.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
