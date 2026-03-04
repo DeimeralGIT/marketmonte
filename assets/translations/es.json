@@ -1,0 +1,105 @@
+{
+    "app": {
+        "title": "Market Monte",
+        "subtitle": "MOTOR DE PREDICCIÓN MCMC"
+    },
+    "header": {
+        "market": "Market ",
+        "monte": "Monte"
+    },
+    "controls": {
+        "symbolSearch": "BUSCAR SÍMBOLO",
+        "filterHint": "Filtrar pares (ej. SOL, ETH...)",
+        "investment": "INVERSIÓN (USDT)",
+        "selectPair": "SELECCIONAR PAR",
+        "selectPairHint": "Seleccione un par",
+        "analyze": "Analizar",
+        "timeHorizon": "HORIZONTE TEMPORAL",
+        "scanMarket": "Escanear líderes",
+        "proTip": "Consejo: ",
+        "proTipText": "El monto de inversión y el horizonte temporal configuran la simulación Monte Carlo para el tamaño de posición.",
+        "failedLoadPairs": "Error al cargar pares"
+    },
+    "pairStats": {
+        "currentPrice": "PRECIO ACTUAL",
+        "high24h": "Máx. 24h",
+        "low24h": "Mín. 24h",
+        "volume": "Volumen"
+    },
+    "analysis": {
+        "regimeDetection": "Detección de régimen: {regime}",
+        "stability": "Estabilidad {score}/100",
+        "lowVol": "Vol. baja",
+        "trending": "Tendencia",
+        "highVol": "Vol. alta",
+        "lowLabel": "Baja",
+        "medLabel": "Med.",
+        "highLabel": "Alta",
+        "annVol": "Vol. anual",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "outlook": "Perspectiva: {symbol}",
+        "recommendedPositions": "Posiciones recomendadas",
+        "analysisError": "Error de análisis"
+    },
+    "leaderboard": {
+        "globalScan": "Escaneo global de líderes del mercado",
+        "topAlpha": "Mejores oportunidades alfa"
+    },
+    "position": {
+        "long": "LARGO",
+        "short": "CORTO",
+        "rank": "RANGO #{rank}",
+        "roiTarget": "Objetivo ROI: ",
+        "entryPrice": "Precio de entrada",
+        "exitTarget": "Objetivo de salida",
+        "stopLoss": "Stop Loss",
+        "expectedValue": "Valor esperado",
+        "slProbability": "Probabilidad SL",
+        "tpProbability": "Probabilidad TP",
+        "size": "TAMAÑO",
+        "quantityLabel": "{quantity} {asset}",
+        "forUsdt": "Por ${amount} USDT",
+        "strategyOutlook": "ESTRATEGIA",
+        "tradeOn": "Operar en {exchange}"
+    },
+    "reminder": {
+        "setExitReminder": "¿Establecer recordatorio?",
+        "basedOnHorizon": "Basado en su horizonte de {horizon}",
+        "closePosition": "Cerrar posición {asset} @ ${price}",
+        "closeBy": "Cerrar antes de",
+        "exitTarget": "Objetivo de salida",
+        "roiTarget": "Objetivo ROI",
+        "skip": "Omitir",
+        "addReminder": "Recordatorio"
+    },
+    "empty": {
+        "readyTitle": "Listo para analizar",
+        "readySubtitle": "Seleccione un par para un análisis profundo o escanee los 10 líderes del mercado para encontrar rupturas con alto ROI."
+    },
+    "footer": {
+        "disclaimer": "MARKET MONTE ES UNA HERRAMIENTA ANALÍTICA. OPERAR CON CRIPTOMONEDAS IMPLICA RIESGO."
+    },
+    "regime": {
+        "lowVolatility": "Volatilidad baja",
+        "lowDescription": "Calmado / Reversión a la media",
+        "mediumVolatility": "Volatilidad media",
+        "mediumDescription": "Tendencial / Normal",
+        "highVolatility": "Volatilidad alta",
+        "highDescription": "Turbulento / Crisis"
+    },
+    "timePeriod": {
+        "1H": "1 hora",
+        "4H": "4 horas",
+        "1D": "1 día",
+        "1W": "1 semana",
+        "1M": "1 mes"
+    },
+    "settings": {
+        "title": "Ajustes",
+        "appearance": "Apariencia",
+        "exchange": "Bolsa",
+        "language": "Idioma",
+        "darkMode": "Modo oscuro",
+        "lightMode": "Modo claro"
+    }
+}

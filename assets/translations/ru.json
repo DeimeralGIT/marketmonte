@@ -1,0 +1,105 @@
+{
+    "app": {
+        "title": "Market Monte",
+        "subtitle": "ДВИЖОК ПРОГНОЗОВ MCMC"
+    },
+    "header": {
+        "market": "Market ",
+        "monte": "Monte"
+    },
+    "controls": {
+        "symbolSearch": "ПОИСК СИМВОЛА",
+        "filterHint": "Фильтр пар (напр. SOL, ETH...)",
+        "investment": "ИНВЕСТИЦИЯ (USDT)",
+        "selectPair": "ВЫБРАТЬ ПАРУ",
+        "selectPairHint": "Выберите пару",
+        "analyze": "Анализ",
+        "timeHorizon": "ВРЕМЕННОЙ ГОРИЗОНТ",
+        "scanMarket": "Сканировать лидеров",
+        "proTip": "Совет: ",
+        "proTipText": "Сумма инвестиций и временной горизонт определяют симуляцию Монте-Карло для размера позиции.",
+        "failedLoadPairs": "Не удалось загрузить пары"
+    },
+    "pairStats": {
+        "currentPrice": "ТЕКУЩАЯ ЦЕНА",
+        "high24h": "Макс. 24ч",
+        "low24h": "Мин. 24ч",
+        "volume": "Объём"
+    },
+    "analysis": {
+        "regimeDetection": "Определение режима: {regime}",
+        "stability": "Стабильность {score}/100",
+        "lowVol": "Низ. вол.",
+        "trending": "Тренд",
+        "highVol": "Выс. вол.",
+        "lowLabel": "Низ.",
+        "medLabel": "Сред.",
+        "highLabel": "Выс.",
+        "annVol": "Год. вол.",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "outlook": "Прогноз: {symbol}",
+        "recommendedPositions": "Рекомендованные позиции",
+        "analysisError": "Ошибка анализа"
+    },
+    "leaderboard": {
+        "globalScan": "Глобальное сканирование лидеров рынка",
+        "topAlpha": "Лучшие альфа-возможности"
+    },
+    "position": {
+        "long": "ЛОНГ",
+        "short": "ШОРТ",
+        "rank": "РАНГ #{rank}",
+        "roiTarget": "Цель ROI: ",
+        "entryPrice": "Цена входа",
+        "exitTarget": "Цель выхода",
+        "stopLoss": "Стоп-лосс",
+        "expectedValue": "Ожидаемая стоимость",
+        "slProbability": "Вероятность SL",
+        "tpProbability": "Вероятность TP",
+        "size": "РАЗМЕР",
+        "quantityLabel": "{quantity} {asset}",
+        "forUsdt": "На ${amount} USDT",
+        "strategyOutlook": "СТРАТЕГИЯ",
+        "tradeOn": "Торговать на {exchange}"
+    },
+    "reminder": {
+        "setExitReminder": "Установить напоминание?",
+        "basedOnHorizon": "На основе горизонта {horizon}",
+        "closePosition": "Закрыть {asset} позицию @ ${price}",
+        "closeBy": "Закрыть до",
+        "exitTarget": "Цель выхода",
+        "roiTarget": "Цель ROI",
+        "skip": "Пропустить",
+        "addReminder": "Напоминание"
+    },
+    "empty": {
+        "readyTitle": "Готов к анализу",
+        "readySubtitle": "Выберите пару для глубокого анализа или просканируйте 10 лидеров рынка для поиска прорывов с высоким ROI."
+    },
+    "footer": {
+        "disclaimer": "MARKET MONTE — АНАЛИТИЧЕСКИЙ ИНСТРУМЕНТ. ТОРГОВЛЯ КРИПТОВАЛЮТАМИ СОПРЯЖЕНА С РИСКОМ."
+    },
+    "regime": {
+        "lowVolatility": "Низкая волатильность",
+        "lowDescription": "Спокойный / Возврат к среднему",
+        "mediumVolatility": "Средняя волатильность",
+        "mediumDescription": "Трендовый / Нормальный",
+        "highVolatility": "Высокая волатильность",
+        "highDescription": "Турбулентный / Кризисный"
+    },
+    "timePeriod": {
+        "1H": "1 час",
+        "4H": "4 часа",
+        "1D": "1 день",
+        "1W": "1 неделя",
+        "1M": "1 месяц"
+    },
+    "settings": {
+        "title": "Настройки",
+        "appearance": "Оформление",
+        "exchange": "Биржа",
+        "language": "Язык",
+        "darkMode": "Тёмная тема",
+        "lightMode": "Светлая тема"
+    }
+}

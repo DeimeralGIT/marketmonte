@@ -1,13 +1,18 @@
 import 'dart:math';
 import '../models/analysis_models.dart';
 import '../models/binance_models.dart';
-import 'binance_service.dart';
+import 'exchange_service.dart';
 import 'regime_detection_service.dart';
 
 class AnalysisService {
-  final BinanceService _binanceService;
+  ExchangeService _exchangeService;
 
-  AnalysisService(this._binanceService);
+  AnalysisService(this._exchangeService);
+
+  /// Swap the underlying exchange service (e.g. when user changes exchange).
+  void updateExchangeService(ExchangeService service) {
+    _exchangeService = service;
+  }
 
   static const int _numSim = 10000;
 
@@ -537,7 +542,7 @@ class AnalysisService {
     final limit = period.hours <= 24
         ? 168
         : (period.hours * 2).ceil().clamp(168, 720);
-    final klines = await _binanceService.fetchHistoricalKlines(
+    final klines = await _exchangeService.fetchHistoricalKlines(
       symbol,
       limit: limit,
     );
@@ -552,7 +557,7 @@ class AnalysisService {
   Future<MarketLeaderboardResult> scanTopMarket({
     TimePeriod period = TimePeriod.oneDay,
   }) async {
-    final topSymbols = await _binanceService.fetchTopUSDTByVolume(limit: 10);
+    final topSymbols = await _exchangeService.fetchTopUSDTByVolume(limit: 10);
     if (topSymbols.isEmpty) {
       throw Exception('Failed to fetch top market symbols');
     }
@@ -561,7 +566,7 @@ class AnalysisService {
 
     for (final symbol in topSymbols) {
       try {
-        final klines = await _binanceService.fetchHistoricalKlines(
+        final klines = await _exchangeService.fetchHistoricalKlines(
           symbol,
           limit: 168,
         );

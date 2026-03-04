@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/market_providers.dart';
+import '../providers/theme_provider.dart';
 import '../widgets/app_header.dart';
 import '../widgets/controls_card.dart';
 import '../widgets/pair_stats.dart';
@@ -10,6 +12,7 @@ import '../widgets/analysis_section.dart';
 import '../widgets/leaderboard_section.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/footer.dart';
+import '../widgets/settings_drawer.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -20,24 +23,20 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
-  void initState() {
-    super.initState();
-    // Initialize with default ticker data after build
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(marketStateProvider.notifier).init();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final marketState = ref.watch(marketStateProvider);
+    // Watch theme so the tree rebuilds when appearance changes
+    ref.watch(themeProvider);
+    // Register as dependent on locale so the tree rebuilds on language change
+    context.locale;
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      endDrawer: SettingsDrawer(),
       body: Column(
         children: [
           // Sticky header
-          const AppHeader(),
+          AppHeader(),
           // Scrollable content
           Expanded(
             child: SingleChildScrollView(
@@ -51,7 +50,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(height: 16),
 
                       // Controls card
-                      const ControlsCard(),
+                      ControlsCard(),
 
                       const SizedBox(height: 24),
 
@@ -62,7 +61,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
 
                       // Pair stats (single analysis tab)
-                      if (marketState.ticker != null &&
+                      if (marketState.tickerLoading &&
+                          marketState.activeTab == ActiveTab.single)
+                        const PairStatsSkeleton()
+                      else if (marketState.ticker != null &&
                           marketState.activeTab == ActiveTab.single)
                         PairStats(
                           ticker: marketState.ticker!,
@@ -94,8 +96,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                       // Loading indicator
                       if (marketState.loading)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 40),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
                           child: Center(
                             child: CircularProgressIndicator(
                               color: AppColors.accent,
@@ -107,10 +109,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       if (!marketState.loading &&
                           marketState.analysis == null &&
                           marketState.leaderboard == null)
-                        const EmptyState(),
+                        EmptyState(),
 
                       // Footer
-                      const AppFooter(),
+                      AppFooter(),
                     ],
                   ),
                 ),
@@ -132,14 +134,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       child: Row(
         children: [
-          const Icon(LucideIcons.info, size: 18, color: AppColors.destructive),
+          Icon(LucideIcons.info, size: 18, color: AppColors.destructive),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Analysis Error',
+                Text(
+                  tr('analysis.analysisError'),
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -149,10 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 const SizedBox(height: 4),
                 Text(
                   error,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.foreground,
-                  ),
+                  style: TextStyle(fontSize: 13, color: AppColors.foreground),
                 ),
               ],
             ),

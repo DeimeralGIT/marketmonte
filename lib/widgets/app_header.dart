@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 
 class AppHeader extends StatelessWidget {
@@ -10,9 +11,7 @@ class AppHeader extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.background.withValues(alpha: 0.85),
-        border: const Border(
-          bottom: BorderSide(color: AppColors.border, width: 0.5),
-        ),
+        border: Border(bottom: BorderSide(color: AppColors.border, width: 0.5)),
       ),
       child: SafeArea(
         bottom: false,
@@ -23,17 +22,10 @@ class AppHeader extends StatelessWidget {
             child: Row(
               children: [
                 // Logo
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    LucideIcons.trendingUp,
-                    size: 20,
-                    color: AppColors.primaryForeground,
-                  ),
+                Image.asset(
+                  'assets/icon/app_icon.png',
+                  height: 32,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 10),
                 // Title
@@ -42,25 +34,25 @@ class AppHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.5,
-                          color: Colors.white,
+                          color: AppColors.foreground,
                           height: 1.2,
                         ),
                         children: [
-                          TextSpan(text: 'Market '),
+                          TextSpan(text: tr('header.market')),
                           TextSpan(
-                            text: 'Monte',
+                            text: tr('header.monte'),
                             style: TextStyle(color: AppColors.accent),
                           ),
                         ],
                       ),
                     ),
-                    const Text(
-                      'MCMC PREDICTION ENGINE',
+                    Text(
+                      tr('app.subtitle'),
                       style: TextStyle(
                         fontSize: 9,
                         color: AppColors.mutedForeground,
@@ -71,6 +63,27 @@ class AppHeader extends StatelessWidget {
                   ],
                 ),
                 const Spacer(),
+                // Settings button
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Scaffold.of(context).openEndDrawer(),
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Icon(
+                        LucideIcons.menu,
+                        size: 18,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

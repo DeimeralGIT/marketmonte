@@ -69,7 +69,7 @@ Raw hourly candles (Binance API)
 
 ### 2.1 Market Data
 
-- **Source:** Binance public REST API (no auth required)
+- **Source:** Configurable exchange via `ExchangeService` abstraction — Binance, Coinbase, or MEXC public REST APIs (no auth required)
 - **Timeframe:** 1H candles
 - **Rolling training window:** 168 hours minimum (1 week)
 - **Fields used:** Close price
@@ -670,10 +670,16 @@ If no positions pass the filter for either direction, the engine falls back to `
 |------|---------|
 | `lib/services/regime_detection_service.dart` | Student-t HMM (Baum-Welch + ECME), Particle Filter, MC Simulator with path tracking, persistence adjustment, `RegimeDetectionService` orchestrator |
 | `lib/services/analysis_service.dart` | Pipeline orchestration, long/short position building, barrier pricing, EV calculation, Kelly sizing, trade filtering, leaderboard scanner |
-| `lib/services/binance_service.dart` | Binance API client (klines, top symbols, trade URLs) |
+| `lib/services/binance_service.dart` | Legacy Binance API client |
+| `lib/services/exchange_service.dart` | Abstract ExchangeService interface |
+| `lib/services/exchanges/binance_exchange_service.dart` | Binance implementation of ExchangeService |
+| `lib/services/exchanges/coinbase_exchange_service.dart` | Coinbase implementation of ExchangeService |
+| `lib/services/exchanges/mexc_exchange_service.dart` | MEXC implementation of ExchangeService |
 | `lib/models/analysis_models.dart` | Data models: `TimePeriod`, `VolatilityRegime`, `TradeDirection`, `RegimeInfo`, `DistributionStats`, `TradingPosition`, etc. |
-| `lib/models/binance_models.dart` | `KlineData`, `BinancePair` models |
+| `lib/models/binance_models.dart` | `KlineData`, `BinancePair` models (shared across exchanges) |
+| `lib/models/exchange_models.dart` | `Exchange` enum (binance, coinbase, mexc) |
 | `lib/providers/market_providers.dart` | Riverpod state management providers |
+| `lib/providers/exchange_provider.dart` | Exchange selection provider (persisted to SharedPreferences) |
 | `lib/widgets/analysis_section.dart` | UI: analysis results + regime detection card |
 | `lib/widgets/position_card.dart` | UI: position card with direction badge, entry/exit/SL, EV, barrier probs |
 | `lib/widgets/leaderboard_section.dart` | UI: market leaderboard display |

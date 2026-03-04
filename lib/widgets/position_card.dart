@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/crypto_names.dart';
 import '../models/analysis_models.dart';
-import '../services/binance_service.dart';
+import '../providers/market_providers.dart';
+import 'crypto_icon.dart';
 
-class PositionCard extends StatelessWidget {
+class PositionCard extends ConsumerWidget {
   final double entryPrice;
   final double exitPrice;
   final double stopLoss;
@@ -44,19 +47,21 @@ class PositionCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isPositive = predictedROI > 0;
     final isLong = direction == TradeDirection.long;
     // Scale EV from per-unit to per-investment
     final scaledEV = entryPrice > 0
         ? expectedValue * (investmentAmount / entryPrice)
         : expectedValue;
-    final binanceUrl = BinanceService.getBinanceTradeUrl(
+    final exchangeService = ref.watch(exchangeServiceProvider);
+    final tradeUrl = exchangeService.getTradeUrl(
       symbol,
       investmentAmount: investmentAmount,
       entryPrice: entryPrice,
       exitPrice: exitPrice,
     );
+    final exchangeName = exchangeService.exchange.displayName;
     final quantity = investmentAmount > 0
         ? (investmentAmount / entryPrice)
         : 0.0;
@@ -108,7 +113,9 @@ class PositionCard extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              isLong ? 'LONG' : 'SHORT',
+                              isLong
+                                  ? tr('position.long')
+                                  : tr('position.short'),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -132,8 +139,11 @@ class PositionCard extends StatelessWidget {
                               color: AppColors.accent.withValues(alpha: 0.05),
                             ),
                             child: Text(
-                              'RANK #$rank',
-                              style: const TextStyle(
+                              tr(
+                                'position.rank',
+                                namedArgs: {'rank': rank.toString()},
+                              ),
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.accent,
@@ -152,7 +162,7 @@ class PositionCard extends StatelessWidget {
                               const SizedBox(width: 3),
                               Text(
                                 '$confidenceScore%',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: AppColors.mutedForeground,
@@ -171,8 +181,8 @@ class PositionCard extends StatelessWidget {
                               alignment: Alignment.centerLeft,
                               child: Row(
                                 children: [
-                                  const Text(
-                                    'ROI Target: ',
+                                  Text(
+                                    tr('position.roiTarget'),
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -199,19 +209,26 @@ class PositionCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isLong
-                        ? LucideIcons.arrowUpRight
-                        : LucideIcons.arrowDownRight,
-                    size: 22,
-                    color: isLong ? AppColors.accent : const Color(0xFFF87171),
-                  ),
+                Column(
+                  children: [
+                    CryptoIcon(symbol: symbol, size: 36),
+                    const SizedBox(height: 4),
+                    Text(
+                      baseAsset,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.foreground,
+                      ),
+                    ),
+                    Text(
+                      cryptoName(symbol),
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: AppColors.mutedForeground,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -227,14 +244,14 @@ class PositionCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _PriceBox(
-                        label: 'Entry Price',
+                        label: tr('position.entryPrice'),
                         value: '\$${formatPrice(entryPrice)}',
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _PriceBox(
-                        label: 'Exit Target',
+                        label: tr('position.exitTarget'),
                         value: '\$${formatPrice(exitPrice)}',
                         valueColor: AppColors.accent,
                       ),
@@ -249,7 +266,7 @@ class PositionCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _PriceBox(
-                        label: 'Stop Loss',
+                        label: tr('position.stopLoss'),
                         value: '\$${formatPrice(stopLoss)}',
                         valueColor: const Color(0xFFF87171),
                       ),
@@ -257,7 +274,7 @@ class PositionCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _PriceBox(
-                        label: 'Expected Value',
+                        label: tr('position.expectedValue'),
                         value: '\$${scaledEV.toStringAsFixed(2)}',
                         valueColor: scaledEV > 0
                             ? const Color(0xFF4ADE80)
@@ -274,7 +291,7 @@ class PositionCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _PriceBox(
-                        label: 'SL Probability',
+                        label: tr('position.slProbability'),
                         value: '${(slProbability * 100).toStringAsFixed(1)}%',
                         valueColor: const Color(0xFFF87171),
                       ),
@@ -282,7 +299,7 @@ class PositionCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _PriceBox(
-                        label: 'TP Probability',
+                        label: tr('position.tpProbability'),
                         value: '${(tpProbability * 100).toStringAsFixed(1)}%',
                         valueColor: const Color(0xFF4ADE80),
                       ),
@@ -312,14 +329,14 @@ class PositionCard extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               LucideIcons.calculator,
                               size: 12,
                               color: AppColors.accent,
                             ),
                             const SizedBox(width: 6),
-                            const Text(
-                              'SIZE',
+                            Text(
+                              tr('position.size'),
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
@@ -332,8 +349,14 @@ class PositionCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '${quantity.toStringAsFixed(6)} $baseAsset',
-                              style: const TextStyle(
+                              tr(
+                                'position.quantityLabel',
+                                namedArgs: {
+                                  'quantity': quantity.toStringAsFixed(6),
+                                  'asset': baseAsset,
+                                },
+                              ),
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'monospace',
@@ -341,8 +364,13 @@ class PositionCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'For \$${investmentAmount.toStringAsFixed(0)} USDT',
-                              style: const TextStyle(
+                              tr(
+                                'position.forUsdt',
+                                namedArgs: {
+                                  'amount': investmentAmount.toStringAsFixed(0),
+                                },
+                              ),
+                              style: TextStyle(
                                 fontSize: 10,
                                 color: AppColors.mutedForeground,
                               ),
@@ -358,14 +386,14 @@ class PositionCard extends StatelessWidget {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       LucideIcons.target,
                       size: 12,
                       color: AppColors.mutedForeground,
                     ),
                     const SizedBox(width: 4),
-                    const Text(
-                      'STRATEGY OUTLOOK',
+                    Text(
+                      tr('position.strategyOutlook'),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -395,9 +423,11 @@ class PositionCard extends StatelessWidget {
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _onTradePressed(context, binanceUrl),
+                onPressed: () => _onTradePressed(context, tradeUrl),
                 icon: const Icon(LucideIcons.externalLink, size: 16),
-                label: const Text('Trade on Binance'),
+                label: Text(
+                  tr('position.tradeOn', namedArgs: {'exchange': exchangeName}),
+                ),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.foreground,
                   backgroundColor: AppColors.secondary,
@@ -449,7 +479,7 @@ class PositionCard extends StatelessWidget {
                     color: AppColors.accent.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     LucideIcons.calendarClock,
                     size: 22,
                     color: AppColors.accent,
@@ -460,8 +490,8 @@ class PositionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Set Exit Reminder?',
+                      Text(
+                        tr('reminder.setExitReminder'),
                         style: TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.bold,
@@ -470,8 +500,13 @@ class PositionCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Based on your ${timePeriod.displayName} horizon',
-                        style: const TextStyle(
+                        tr(
+                          'reminder.basedOnHorizon',
+                          namedArgs: {
+                            'horizon': _timePeriodDisplayName(timePeriod),
+                          },
+                        ),
+                        style: TextStyle(
                           fontSize: 12,
                           color: AppColors.mutedForeground,
                         ),
@@ -496,16 +531,18 @@ class PositionCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        LucideIcons.bell,
-                        size: 14,
-                        color: AppColors.accent,
-                      ),
+                      Icon(LucideIcons.bell, size: 14, color: AppColors.accent),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Close $baseAsset position @ \$${formatPrice(exitPrice)}',
-                          style: const TextStyle(
+                          tr(
+                            'reminder.closePosition',
+                            namedArgs: {
+                              'asset': baseAsset,
+                              'price': formatPrice(exitPrice),
+                            },
+                          ),
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.foreground,
@@ -517,19 +554,19 @@ class PositionCard extends StatelessWidget {
                   const SizedBox(height: 10),
                   _calendarDetailRow(
                     LucideIcons.clock,
-                    'Close by',
+                    tr('reminder.closeBy'),
                     formattedClose,
                   ),
                   const SizedBox(height: 6),
                   _calendarDetailRow(
                     LucideIcons.target,
-                    'Exit target',
+                    tr('reminder.exitTarget'),
                     '\$${formatPrice(exitPrice)}',
                   ),
                   const SizedBox(height: 6),
                   _calendarDetailRow(
                     LucideIcons.trendingUp,
-                    'ROI target',
+                    tr('reminder.roiTarget'),
                     formatROI(predictedROI),
                   ),
                 ],
@@ -547,7 +584,7 @@ class PositionCard extends StatelessWidget {
                       side: BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    child: const Text('Skip'),
+                    child: Text(tr('reminder.skip')),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -556,7 +593,7 @@ class PositionCard extends StatelessWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.pop(ctx, true),
                     icon: const Icon(LucideIcons.calendarPlus, size: 16),
-                    label: const Text('Add Reminder'),
+                    label: Text(tr('reminder.addReminder')),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accent,
                       foregroundColor: AppColors.background,
@@ -590,14 +627,11 @@ class PositionCard extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.mutedForeground,
-          ),
+          style: TextStyle(fontSize: 12, color: AppColors.mutedForeground),
         ),
         Text(
           value,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
             fontFamily: 'monospace',
@@ -672,6 +706,21 @@ class PositionCard extends StatelessWidget {
       }
     }
   }
+
+  String _timePeriodDisplayName(TimePeriod period) {
+    switch (period) {
+      case TimePeriod.oneHour:
+        return tr('timePeriod.1H');
+      case TimePeriod.fourHours:
+        return tr('timePeriod.4H');
+      case TimePeriod.oneDay:
+        return tr('timePeriod.1D');
+      case TimePeriod.oneWeek:
+        return tr('timePeriod.1W');
+      case TimePeriod.oneMonth:
+        return tr('timePeriod.1M');
+    }
+  }
 }
 
 class _PriceBox extends StatelessWidget {
@@ -695,7 +744,7 @@ class _PriceBox extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
               color: AppColors.mutedForeground,

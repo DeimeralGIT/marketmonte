@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../models/analysis_models.dart';
 import 'position_card.dart';
@@ -35,15 +36,15 @@ class LeaderboardSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     LucideIcons.trendingUp,
                     size: 18,
                     color: AppColors.accent,
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Global Market Leaders Scan',
+                      tr('leaderboard.globalScan'),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -73,8 +74,8 @@ class LeaderboardSection extends StatelessWidget {
           children: [
             const Icon(LucideIcons.zap, size: 18, color: Color(0xFFFACC15)),
             const SizedBox(width: 8),
-            const Text(
-              'Top Alpha Opportunities',
+            Text(
+              tr('leaderboard.topAlpha'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
