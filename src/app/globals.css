@@ -40,6 +40,8 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
@@ -49,4 +51,12 @@
 
 .accent-glow {
   box-shadow: 0 0 20px rgba(102, 178, 255, 0.15);
+}
+
+/* Mobile specific overrides */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
