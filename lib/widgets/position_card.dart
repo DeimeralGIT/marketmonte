@@ -10,8 +10,14 @@ import '../services/binance_service.dart';
 class PositionCard extends StatelessWidget {
   final double entryPrice;
   final double exitPrice;
+  final double stopLoss;
   final double predictedROI;
   final int confidenceScore;
+  final double tpProbability;
+  final double slProbability;
+  final double expectedValue;
+  final double positionSizePct;
+  final TradeDirection direction;
   final String strategyDescription;
   final int rank;
   final String symbol;
@@ -22,8 +28,14 @@ class PositionCard extends StatelessWidget {
     super.key,
     required this.entryPrice,
     required this.exitPrice,
+    this.stopLoss = 0.0,
     required this.predictedROI,
     required this.confidenceScore,
+    this.tpProbability = 0.0,
+    this.slProbability = 0.0,
+    this.expectedValue = 0.0,
+    this.positionSizePct = 0.0,
+    this.direction = TradeDirection.long,
     required this.strategyDescription,
     required this.rank,
     required this.symbol,
@@ -34,6 +46,11 @@ class PositionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isPositive = predictedROI > 0;
+    final isLong = direction == TradeDirection.long;
+    // Scale EV from per-unit to per-investment
+    final scaledEV = entryPrice > 0
+        ? expectedValue * (investmentAmount / entryPrice)
+        : expectedValue;
     final binanceUrl = BinanceService.getBinanceTradeUrl(
       symbol,
       investmentAmount: investmentAmount,
@@ -64,8 +81,43 @@ class PositionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
+                          // Direction badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(6),
+                              color:
+                                  (isLong
+                                          ? const Color(0xFF4ADE80)
+                                          : const Color(0xFFF87171))
+                                      .withValues(alpha: 0.12),
+                              border: Border.all(
+                                color:
+                                    (isLong
+                                            ? const Color(0xFF4ADE80)
+                                            : const Color(0xFFF87171))
+                                        .withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Text(
+                              isLong ? 'LONG' : 'SHORT',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isLong
+                                    ? const Color(0xFF4ADE80)
+                                    : const Color(0xFFF87171),
+                              ),
+                            ),
+                          ),
                           // Rank badge
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -88,43 +140,57 @@ class PositionCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 8),
                           // Confidence
-                          Icon(
-                            LucideIcons.shieldCheck,
-                            size: 12,
-                            color: AppColors.accent,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '$confidenceScore% Confidence',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.mutedForeground,
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                LucideIcons.shieldCheck,
+                                size: 12,
+                                color: AppColors.accent,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '$confidenceScore%',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.mutedForeground,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Text(
-                            'ROI Target: ',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.foreground,
-                            ),
-                          ),
-                          Text(
-                            formatROI(predictedROI),
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: isPositive
-                                  ? const Color(0xFF4ADE80)
-                                  : const Color(0xFFF87171),
+                          Flexible(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    'ROI Target: ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.foreground,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatROI(predictedROI),
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: isPositive
+                                          ? const Color(0xFF4ADE80)
+                                          : const Color(0xFFF87171),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -132,16 +198,19 @@ class PositionCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(width: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppColors.secondary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    LucideIcons.arrowUpRight,
+                  child: Icon(
+                    isLong
+                        ? LucideIcons.arrowUpRight
+                        : LucideIcons.arrowDownRight,
                     size: 22,
-                    color: AppColors.accent,
+                    color: isLong ? AppColors.accent : const Color(0xFFF87171),
                   ),
                 ),
               ],
@@ -162,12 +231,60 @@ class PositionCard extends StatelessWidget {
                         value: '\$${formatPrice(entryPrice)}',
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: _PriceBox(
                         label: 'Exit Target',
                         value: '\$${formatPrice(exitPrice)}',
                         valueColor: AppColors.accent,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // Stop Loss / Expected Value row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _PriceBox(
+                        label: 'Stop Loss',
+                        value: '\$${formatPrice(stopLoss)}',
+                        valueColor: const Color(0xFFF87171),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _PriceBox(
+                        label: 'Expected Value',
+                        value: '\$${scaledEV.toStringAsFixed(2)}',
+                        valueColor: scaledEV > 0
+                            ? const Color(0xFF4ADE80)
+                            : const Color(0xFFF87171),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 8),
+
+                // SL Prob / TP Prob row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _PriceBox(
+                        label: 'SL Probability',
+                        value: '${(slProbability * 100).toStringAsFixed(1)}%',
+                        valueColor: const Color(0xFFF87171),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _PriceBox(
+                        label: 'TP Probability',
+                        value: '${(tpProbability * 100).toStringAsFixed(1)}%',
+                        valueColor: const Color(0xFF4ADE80),
                       ),
                     ),
                   ],
@@ -567,7 +684,7 @@ class _PriceBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.background.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(AppTheme.borderRadius),
@@ -585,13 +702,18 @@ class _PriceBox extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'monospace',
-              color: valueColor ?? AppColors.foreground,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'monospace',
+                color: valueColor ?? AppColors.foreground,
+              ),
             ),
           ),
         ],
