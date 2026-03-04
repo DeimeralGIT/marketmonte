@@ -6,7 +6,7 @@ import { fetchUSDTTradingPairs, BinancePair, fetch24hTicker } from '@/lib/binanc
 import { analyzePairAction, scanTopMarketAction } from '@/app/actions/analysis';
 import { GenerateCryptoPositionsOutput } from '@/ai/flows/generate-crypto-positions';
 import { MarketLeaderboardOutput } from '@/ai/flows/generate-market-leaderboard';
-import { Search, Loader2, Info, BrainCircuit, LayoutGrid, Sparkles, Zap, TrendingUp } from 'lucide-react';
+import { Search, Loader2, Info, BrainCircuit, LayoutGrid, Sparkles, Zap, TrendingUp, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -25,6 +25,7 @@ export default function AppContainer() {
   const [pairs, setPairs] = useState<BinancePair[]>([]);
   const [selectedPair, setSelectedPair] = useState<string>('BTCUSDT');
   const [searchQuery, setSearchQuery] = useState('');
+  const [investmentAmount, setInvestmentAmount] = useState<number>(100);
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<GenerateCryptoPositionsOutput | null>(null);
   const [leaderboard, setLeaderboard] = useState<MarketLeaderboardOutput | null>(null);
@@ -110,7 +111,22 @@ export default function AppContainer() {
                     />
                   </div>
                 </div>
-                <div className="w-full md:w-64 space-y-2">
+
+                <div className="w-full md:w-48 space-y-2">
+                  <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Investment (USDT)</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-accent" />
+                    <Input 
+                      type="number"
+                      placeholder="100" 
+                      className="pl-10 bg-background/50 border-border font-code"
+                      value={investmentAmount}
+                      onChange={(e) => setInvestmentAmount(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div className="w-full md:w-56 space-y-2">
                   <label className="text-xs font-bold text-muted-foreground uppercase ml-1">Select Pair</label>
                   <Select value={selectedPair} onValueChange={setSelectedPair}>
                     <SelectTrigger className="bg-background/50 border-border font-code">
@@ -125,6 +141,7 @@ export default function AppContainer() {
                     </SelectContent>
                   </Select>
                 </div>
+                
                 <Button 
                   onClick={handleAnalyze} 
                   disabled={loading}
@@ -135,19 +152,19 @@ export default function AppContainer() {
                   ) : (
                     <BrainCircuit className="w-4 h-4 mr-2" />
                   )}
-                  Analyze Single
+                  Analyze
                 </Button>
               </div>
 
-              <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+              <div className="pt-4 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="text-xs text-muted-foreground">
-                  <span className="font-bold text-accent">Pro Tip:</span> Scan top 10 pairs by volume to find market-wide alpha.
+                  <span className="font-bold text-accent">Pro Tip:</span> Your investment amount is used to calculate suggested position sizes.
                 </div>
                 <Button 
                   onClick={handleScanMarket} 
                   disabled={loading}
                   variant="outline"
-                  className="border-accent/30 hover:bg-accent/10 text-accent font-bold"
+                  className="w-full md:w-auto border-accent/30 hover:bg-accent/10 text-accent font-bold"
                 >
                   {loading && activeTab === 'market' ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -198,6 +215,7 @@ export default function AppContainer() {
                       key={idx}
                       rank={idx + 1}
                       symbol={selectedPair}
+                      investmentAmount={investmentAmount}
                       {...pos}
                     />
                   ))}
@@ -230,6 +248,7 @@ export default function AppContainer() {
                       key={idx}
                       rank={idx + 1}
                       symbol={pick.symbol}
+                      investmentAmount={investmentAmount}
                       entryPrice={pick.entryPrice}
                       exitPrice={pick.exitPrice}
                       predictedROI={pick.predictedROI}

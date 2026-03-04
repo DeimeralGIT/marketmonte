@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Target, ArrowUpRight, ShieldCheck, ExternalLink } from 'lucide-react';
+import { Target, ArrowUpRight, ShieldCheck, ExternalLink, Calculator } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getBinanceTradeUrl } from '@/lib/binance';
 
@@ -14,6 +14,7 @@ interface PositionProps {
   strategyDescription: string;
   rank: number;
   symbol: string;
+  investmentAmount: number;
 }
 
 export default function PositionCard({ 
@@ -23,10 +24,15 @@ export default function PositionCard({
   confidenceScore, 
   strategyDescription,
   rank,
-  symbol
+  symbol,
+  investmentAmount
 }: PositionProps) {
   const isPositive = predictedROI > 0;
-  const binanceUrl = getBinanceTradeUrl(symbol);
+  const binanceUrl = getBinanceTradeUrl(symbol, investmentAmount);
+  
+  // Calculate quantity to buy
+  const quantity = investmentAmount > 0 ? (investmentAmount / entryPrice) : 0;
+  const baseAsset = symbol.replace('USDT', '');
 
   return (
     <Card className="crypto-card-gradient border-border/40 hover:border-accent/40 transition-all duration-300 group flex flex-col">
@@ -67,6 +73,21 @@ export default function PositionCard({
             <p className="text-xl font-code font-medium text-accent">${exitPrice.toLocaleString()}</p>
           </div>
         </div>
+
+        {investmentAmount > 0 && (
+          <div className="p-3 rounded-lg bg-accent/5 border border-accent/20 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-bold text-accent uppercase">
+              <Calculator className="w-3 h-3" />
+              Size
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-code font-bold">
+                {quantity.toLocaleString(undefined, { maximumFractionDigits: 6 })} {baseAsset}
+              </p>
+              <p className="text-[10px] text-muted-foreground">For ${investmentAmount} USDT</p>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2">
           <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1 uppercase tracking-tight">

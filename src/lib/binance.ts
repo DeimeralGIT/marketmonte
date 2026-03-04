@@ -86,11 +86,19 @@ export async function fetch24hTicker(symbol: string) {
 /**
  * Generates a Binance deep-link URL for a specific trading pair.
  * Formats standard symbols like BTCUSDT to Binance-friendly BTC_USDT for the URL path.
+ * Optionally includes investment amount hints.
  */
-export function getBinanceTradeUrl(symbol: string): string {
-  // Binance trade URLs usually prefer symbols in base_quote format for redirects
+export function getBinanceTradeUrl(symbol: string, investmentAmount?: number): string {
   const formattedSymbol = symbol.endsWith('USDT') 
     ? `${symbol.replace('USDT', '')}_USDT` 
     : symbol;
-  return `https://www.binance.com/en/trade/${formattedSymbol}?type=spot`;
+  
+  const baseUrl = `https://www.binance.com/en/trade/${formattedSymbol}?type=spot`;
+  
+  if (investmentAmount && investmentAmount > 0) {
+    // Adding as query params which some Binance deep-link handlers use for pre-filling
+    return `${baseUrl}&quoteOrderQty=${investmentAmount}`;
+  }
+  
+  return baseUrl;
 }
