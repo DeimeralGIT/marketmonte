@@ -1,0 +1,128 @@
+{
+    "app": {
+        "title": "Market Monte",
+        "subtitle": "MOTORE DI PREVISIONE MCMC"
+    },
+    "header": {
+        "market": "Market ",
+        "monte": "Monte"
+    },
+    "controls": {
+        "symbolSearch": "RICERCA SIMBOLO",
+        "filterHint": "Filtra coppie (es. SOL, ETH...)",
+        "investment": "INVESTIMENTO (USDT)",
+        "selectPair": "SELEZIONA COPPIA",
+        "selectPairHint": "Seleziona una coppia",
+        "analyze": "Analizza",
+        "timeHorizon": "ORIZZONTE TEMPORALE",
+        "scanMarket": "Scansiona Leader di Mercato",
+        "proTip": "Suggerimento: ",
+        "proTipText": "L'importo dell'investimento e l'orizzonte temporale modellano la simulazione Monte Carlo per il dimensionamento delle posizioni.",
+        "failedLoadPairs": "Impossibile caricare le coppie"
+    },
+    "pairStats": {
+        "currentPrice": "PREZZO ATTUALE",
+        "high24h": "Massimo 24h",
+        "low24h": "Minimo 24h",
+        "volume": "Volume"
+    },
+    "analysis": {
+        "regimeDetection": "Rilevamento Regime: {regime}",
+        "stability": "Stabilità {score}/100",
+        "lowVol": "Vol Bassa",
+        "trending": "Tendenza",
+        "highVol": "Vol Alta",
+        "lowLabel": "Bassa",
+        "medLabel": "Media",
+        "highLabel": "Alta",
+        "annVol": "Vol Ann.",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Filtro Particellare (500) + MC Spazio degli Stati",
+        "outlook": "Prospettiva: {symbol}",
+        "recommendedPositions": "Posizioni Raccomandate",
+        "analysisError": "Errore di Analisi",
+        "bullish": "rialzista",
+        "bearish": "ribassista",
+        "summaryTemplate": "Motore ibrido (Student-t HMM + PF + State-Space MC, orizzonte {horizon}, {paths} traiettorie): {symbol} rilevato in regime {regime} ({confidence}% fiducia, stabilità {stability}/100, entropia {entropy}%). Prospettiva {trend} con vol annualizzata adattata al regime {annVol}%. Prezzo mediano ${median} (P25: ${p25}, P75: ${p75}). Asimmetria {skew}, curtosi {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservativa): {orderType} {discount}% {side} del mercato. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Stabilità {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (aggressiva): {orderType} {discount}% {side} del mercato. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Vol Bassa",
+        "regimeTrendingShort": "Tendenza",
+        "regimeHighVolShort": "Vol Alta",
+        "dirLong": "LONG",
+        "dirShort": "SHORT",
+        "limitBuy": "acquisto limitato",
+        "limitSell": "vendita limitata",
+        "below": "sotto",
+        "above": "sopra"
+    },
+    "leaderboard": {
+        "globalScan": "Scansione Globale Leader di Mercato",
+        "topAlpha": "Migliori Opportunità Alpha",
+        "reasoningTemplate": "Selezione adattiva al regime: regime {regime} rilevato (stabilità {stability}/100, entropia {entropy}%). Posizione {direction}. Student-t HMM + PF, {paths} traiettorie in {horizon}. EV: ${ev}.",
+        "globalOutlookTemplate": "Scansione ibrida adattiva al regime (orizzonte {horizon}): Student-t HMM + PF + State-Space MC su {pairsCount} coppie ad alto volume. Distribuzione dei regimi: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leader classificati per valore atteso penalizzato dall'entropia."
+    },
+    "position": {
+        "long": "LONG",
+        "short": "SHORT",
+        "rank": "RANK #{rank}",
+        "roiTarget": "Obiettivo ROI: ",
+        "entryPrice": "Prezzo di Entrata",
+        "exitTarget": "Obiettivo di Uscita",
+        "stopLoss": "Stop Loss",
+        "expectedValue": "Valore Atteso",
+        "slProbability": "Probabilità SL",
+        "tpProbability": "Probabilità TP",
+        "size": "DIMENSIONE",
+        "quantityLabel": "{quantity} {asset}",
+        "forUsdt": "Per ${amount} USDT",
+        "strategyOutlook": "PROSPETTIVA STRATEGICA",
+        "tradeOn": "Scambia su {exchange}"
+    },
+    "reminder": {
+        "setExitReminder": "Impostare Promemoria di Uscita?",
+        "basedOnHorizon": "In base al tuo orizzonte di {horizon}",
+        "closePosition": "Chiudi posizione {asset} @ ${price}",
+        "closeBy": "Chiudi entro",
+        "exitTarget": "Obiettivo di uscita",
+        "roiTarget": "Obiettivo ROI",
+        "skip": "Salta",
+        "addReminder": "Aggiungi Promemoria",
+        "calendarTitle": "Chiudi posizione {asset} – obiettivo ${price}",
+        "calendarDetails": "Promemoria MarketMonte\n\nCoppia: {symbol}\nEntrata: ${entry}\nObiettivo di uscita: ${exit}\nObiettivo ROI: {roi}\nFiducia: {confidence}%\n\nStrategia: {strategy}"
+    },
+    "empty": {
+        "readyTitle": "Pronto per l'analisi",
+        "readySubtitle": "Seleziona una coppia per un'analisi approfondita o scansiona i 10 leader di mercato per trovare breakout ad alto ROI."
+    },
+    "footer": {
+        "disclaimer": "MARKET MONTE È UNO STRUMENTO ANALITICO. IL TRADING DI CRIPTOVALUTE COMPORTA RISCHI."
+    },
+    "regime": {
+        "lowVolatility": "Volatilità Bassa",
+        "lowDescription": "Calmo / Ritorno alla Media",
+        "mediumVolatility": "Volatilità Media",
+        "mediumDescription": "Tendenziale / Normale",
+        "highVolatility": "Volatilità Alta",
+        "highDescription": "Turbolento / Crisi"
+    },
+    "timePeriod": {
+        "1H": "1 Ora",
+        "4H": "4 Ore",
+        "1D": "1 Giorno",
+        "1W": "1 Settimana",
+        "1M": "1 Mese"
+    },
+    "settings": {
+        "title": "Impostazioni",
+        "appearance": "Aspetto",
+        "exchange": "Exchange",
+        "language": "Lingua",
+        "darkMode": "Modalità Scura",
+        "lightMode": "Modalità Chiara",
+        "versionFooter": "Market Monte v1.0.0 di Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "Nessun dato storico disponibile per {symbol}",
+        "failedFetchSymbols": "Impossibile recuperare i principali simboli del mercato"
+    }
+}

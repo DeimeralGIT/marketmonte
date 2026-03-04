@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 
 class AppFooter extends StatelessWidget {
@@ -16,9 +17,9 @@ class AppFooter extends StatelessWidget {
           ),
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Text(
-          'MARKET MONTE IS AN ANALYTICAL TOOL. TRADING CRYPTOCURRENCIES INVOLVES RISK.',
+          tr('footer.disclaimer'),
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 9,

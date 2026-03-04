@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 
 class EmptyState extends StatelessWidget {
@@ -26,8 +27,8 @@ class EmptyState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Ready for analysis',
+            Text(
+              tr('empty.readyTitle'),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -35,10 +36,10 @@ class EmptyState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            const SizedBox(
+            SizedBox(
               width: 320,
               child: Text(
-                'Select a pair for deep analysis or scan the top 10 market leaders to find high-ROI breakouts.',
+                tr('empty.readySubtitle'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,

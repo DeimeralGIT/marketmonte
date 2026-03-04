@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../models/binance_models.dart';
 import '../models/analysis_models.dart';
@@ -170,10 +171,10 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Text(
-            'SYMBOL SEARCH',
+            tr('controls.symbolSearch'),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -185,8 +186,8 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
           controller: _searchController,
           onChanged: (v) => notifier.setSearchQuery(v),
           decoration: InputDecoration(
-            hintText: 'Filter pairs (e.g. SOL, ETH...)',
-            prefixIcon: const Icon(
+            hintText: tr('controls.filterHint'),
+            prefixIcon: Icon(
               LucideIcons.search,
               size: 16,
               color: AppColors.mutedForeground,
@@ -194,7 +195,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
             filled: true,
             fillColor: AppColors.background.withValues(alpha: 0.5),
           ),
-          style: const TextStyle(fontSize: 14, color: AppColors.foreground),
+          style: TextStyle(fontSize: 14, color: AppColors.foreground),
         ),
       ],
     );
@@ -204,10 +205,10 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Text(
-            'INVESTMENT (USDT)',
+            tr('controls.investment'),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -224,7 +225,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
           },
           decoration: InputDecoration(
             hintText: '100',
-            prefixIcon: const Icon(
+            prefixIcon: Icon(
               LucideIcons.dollarSign,
               size: 16,
               color: AppColors.accent,
@@ -232,7 +233,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
             filled: true,
             fillColor: AppColors.background.withValues(alpha: 0.5),
           ),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontFamily: 'monospace',
             color: AppColors.foreground,
@@ -250,10 +251,10 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Text(
-            'SELECT PAIR',
+            tr('controls.selectPair'),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -287,8 +288,8 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: hasSelected ? marketState.selectedPair : null,
-                  hint: const Text(
-                    'Select a pair',
+                  hint: Text(
+                    tr('controls.selectPairHint'),
                     style: TextStyle(
                       color: AppColors.mutedForeground,
                       fontSize: 14,
@@ -297,7 +298,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
                   isExpanded: true,
                   dropdownColor: AppColors.card,
                   menuMaxHeight: 300,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontFamily: 'monospace',
                     color: AppColors.foreground,
@@ -322,7 +323,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
               borderRadius: BorderRadius.circular(AppTheme.borderRadius),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Center(
+            child: Center(
               child: SizedBox(
                 width: 20,
                 height: 20,
@@ -340,9 +341,9 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
               borderRadius: BorderRadius.circular(AppTheme.borderRadius),
               border: Border.all(color: AppColors.destructive),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                'Failed to load pairs',
+                tr('controls.failedLoadPairs'),
                 style: TextStyle(color: AppColors.destructive, fontSize: 12),
               ),
             ),
@@ -364,7 +365,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : () => notifier.analyzePair(),
         icon: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 16,
                 height: 16,
                 child: CircularProgressIndicator(
@@ -372,8 +373,8 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
                   color: AppColors.primaryForeground,
                 ),
               )
-            : const Icon(LucideIcons.brainCircuit, size: 16),
-        label: const Text('Analyze'),
+            : Icon(LucideIcons.brainCircuit, size: 16),
+        label: Text(tr('controls.analyze')),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.primaryForeground,
@@ -391,10 +392,10 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
           child: Text(
-            'TIME HORIZON',
+            tr('controls.timeHorizon'),
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -442,7 +443,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          period.displayName,
+                          _timePeriodDisplayName(period),
                           style: TextStyle(
                             fontSize: 9,
                             color: isSelected
@@ -467,19 +468,16 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
   Widget _buildProTip() {
     return RichText(
       text: TextSpan(
-        style: const TextStyle(fontSize: 11, color: AppColors.mutedForeground),
-        children: const [
+        style: TextStyle(fontSize: 11, color: AppColors.mutedForeground),
+        children: [
           TextSpan(
-            text: 'Pro Tip: ',
+            text: tr('controls.proTip'),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.accent,
             ),
           ),
-          TextSpan(
-            text:
-                'Your investment amount & time horizon shape the Monte Carlo simulation for position sizing.',
-          ),
+          TextSpan(text: tr('controls.proTipText')),
         ],
       ),
     );
@@ -495,7 +493,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
     return OutlinedButton.icon(
       onPressed: isLoading ? null : () => notifier.scanMarket(),
       icon: isLoading
-          ? const SizedBox(
+          ? SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
@@ -504,7 +502,7 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
               ),
             )
           : const Icon(LucideIcons.zap, size: 16),
-      label: const Text('Scan Market Leaders'),
+      label: Text(tr('controls.scanMarket')),
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.accent,
         side: BorderSide(color: AppColors.accent.withValues(alpha: 0.3)),
@@ -512,5 +510,20 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
         textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
     );
+  }
+
+  String _timePeriodDisplayName(TimePeriod period) {
+    switch (period) {
+      case TimePeriod.oneHour:
+        return tr('timePeriod.1H');
+      case TimePeriod.fourHours:
+        return tr('timePeriod.4H');
+      case TimePeriod.oneDay:
+        return tr('timePeriod.1D');
+      case TimePeriod.oneWeek:
+        return tr('timePeriod.1W');
+      case TimePeriod.oneMonth:
+        return tr('timePeriod.1M');
+    }
   }
 }

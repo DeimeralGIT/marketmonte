@@ -1,0 +1,128 @@
+{
+    "app": {
+        "title": "Market Monte",
+        "subtitle": "MOTEUR DE PRÉDICTION MCMC"
+    },
+    "header": {
+        "market": "Market ",
+        "monte": "Monte"
+    },
+    "controls": {
+        "symbolSearch": "RECHERCHE DE SYMBOLE",
+        "filterHint": "Filtrer les paires (ex. SOL, ETH...)",
+        "investment": "INVESTISSEMENT (USDT)",
+        "selectPair": "SÉLECTIONNER UNE PAIRE",
+        "selectPairHint": "Sélectionnez une paire",
+        "analyze": "Analyser",
+        "timeHorizon": "HORIZON TEMPOREL",
+        "scanMarket": "Scanner les leaders",
+        "proTip": "Astuce : ",
+        "proTipText": "Le montant d'investissement et l'horizon temporel configurent la simulation Monte Carlo pour le dimensionnement de position.",
+        "failedLoadPairs": "Échec du chargement des paires"
+    },
+    "pairStats": {
+        "currentPrice": "PRIX ACTUEL",
+        "high24h": "Max. 24h",
+        "low24h": "Min. 24h",
+        "volume": "Volume"
+    },
+    "analysis": {
+        "regimeDetection": "Détection de régime : {regime}",
+        "stability": "Stabilité {score}/100",
+        "lowVol": "Vol. faible",
+        "trending": "Tendance",
+        "highVol": "Vol. forte",
+        "lowLabel": "Faible",
+        "medLabel": "Moy.",
+        "highLabel": "Forte",
+        "annVol": "Vol. ann.",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "outlook": "Perspective : {symbol}",
+        "recommendedPositions": "Positions recommandées",
+        "analysisError": "Erreur d'analyse",
+        "bullish": "haussière",
+        "bearish": "baissière",
+        "summaryTemplate": "Moteur hybride (Student-t HMM + PF + State-Space MC, horizon {horizon}, {paths} trajectoires) : {symbol} détecté en régime {regime} ({confidence}% confiance, stabilité {stability}/100, entropie {entropy}%). Perspective {trend} avec vol annualisée ajustée au régime {annVol}%. Prix médian ${median} (P25 : ${p25}, P75 : ${p75}). Asymétrie {skew}, kurtosis {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservatrice) : {orderType} {discount}% {side} du marché. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Stabilité {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (agressive) : {orderType} {discount}% {side} du marché. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Vol Faible",
+        "regimeTrendingShort": "Tendance",
+        "regimeHighVolShort": "Vol Forte",
+        "dirLong": "LONG",
+        "dirShort": "SHORT",
+        "limitBuy": "achat limité",
+        "limitSell": "vente limitée",
+        "below": "en dessous",
+        "above": "au-dessus"
+    },
+    "leaderboard": {
+        "globalScan": "Scan global des leaders du marché",
+        "topAlpha": "Meilleures opportunités alpha",
+        "reasoningTemplate": "Sélection adaptative au régime : régime {regime} détecté (stabilité {stability}/100, entropie {entropy}%). Position {direction}. Student-t HMM + PF, {paths} trajectoires sur {horizon}. EV : ${ev}.",
+        "globalOutlookTemplate": "Scan hybride adaptatif au régime (horizon {horizon}) : Student-t HMM + PF + State-Space MC sur {pairsCount} paires à haut volume. Distribution des régimes : {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leaders classés par valeur attendue pénalisée par l'entropie."
+    },
+    "position": {
+        "long": "LONG",
+        "short": "SHORT",
+        "rank": "RANG #{rank}",
+        "roiTarget": "Objectif ROI : ",
+        "entryPrice": "Prix d'entrée",
+        "exitTarget": "Objectif de sortie",
+        "stopLoss": "Stop Loss",
+        "expectedValue": "Valeur attendue",
+        "slProbability": "Probabilité SL",
+        "tpProbability": "Probabilité TP",
+        "size": "TAILLE",
+        "quantityLabel": "{quantity} {asset}",
+        "forUsdt": "Pour ${amount} USDT",
+        "strategyOutlook": "STRATÉGIE",
+        "tradeOn": "Trader sur {exchange}"
+    },
+    "reminder": {
+        "setExitReminder": "Définir un rappel ?",
+        "basedOnHorizon": "Basé sur votre horizon de {horizon}",
+        "closePosition": "Fermer la position {asset} @ ${price}",
+        "closeBy": "Fermer avant",
+        "exitTarget": "Objectif de sortie",
+        "roiTarget": "Objectif ROI",
+        "skip": "Passer",
+        "addReminder": "Rappel",
+        "calendarTitle": "Fermer la position {asset} – cible ${price}",
+        "calendarDetails": "Rappel MarketMonte\n\nPaire : {symbol}\nEntrée : ${entry}\nObjectif de sortie : ${exit}\nObjectif ROI : {roi}\nConfiance : {confidence}%\n\nStratégie : {strategy}"
+    },
+    "empty": {
+        "readyTitle": "Prêt pour l'analyse",
+        "readySubtitle": "Sélectionnez une paire pour une analyse approfondie ou scannez les 10 leaders du marché pour trouver des ruptures à fort ROI."
+    },
+    "footer": {
+        "disclaimer": "MARKET MONTE EST UN OUTIL ANALYTIQUE. LE TRADING DE CRYPTOMONNAIES COMPORTE DES RISQUES."
+    },
+    "regime": {
+        "lowVolatility": "Volatilité faible",
+        "lowDescription": "Calme / Retour à la moyenne",
+        "mediumVolatility": "Volatilité moyenne",
+        "mediumDescription": "Tendanciel / Normal",
+        "highVolatility": "Volatilité forte",
+        "highDescription": "Turbulent / Crise"
+    },
+    "timePeriod": {
+        "1H": "1 heure",
+        "4H": "4 heures",
+        "1D": "1 jour",
+        "1W": "1 semaine",
+        "1M": "1 mois"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "appearance": "Apparence",
+        "exchange": "Bourse",
+        "language": "Langue",
+        "darkMode": "Mode sombre",
+        "lightMode": "Mode clair",
+        "versionFooter": "Market Monte v1.0.0 par Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "Aucune donnée historique disponible pour {symbol}",
+        "failedFetchSymbols": "Échec de la récupération des principaux symboles"
+    }
+}

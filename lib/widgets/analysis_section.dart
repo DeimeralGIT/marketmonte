@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../models/analysis_models.dart';
 import 'position_card.dart';
@@ -79,16 +80,12 @@ class AnalysisSection extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        LucideIcons.info,
-                        size: 18,
-                        color: AppColors.accent,
-                      ),
+                      Icon(LucideIcons.info, size: 18, color: AppColors.accent),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Outlook: $symbol',
-                          style: const TextStyle(
+                          tr('analysis.outlook', namedArgs: {'symbol': symbol}),
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: AppColors.foreground,
@@ -117,14 +114,10 @@ class AnalysisSection extends StatelessWidget {
         // Header
         Row(
           children: [
-            const Icon(
-              LucideIcons.layoutGrid,
-              size: 18,
-              color: AppColors.accent,
-            ),
+            Icon(LucideIcons.layoutGrid, size: 18, color: AppColors.accent),
             const SizedBox(width: 8),
-            const Text(
-              'Recommended Positions',
+            Text(
+              tr('analysis.recommendedPositions'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -223,7 +216,10 @@ class AnalysisSection extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Regime Detection: ${regime.currentRegime.label}',
+                  tr(
+                    'analysis.regimeDetection',
+                    namedArgs: {'regime': _regimeLabel(regime.currentRegime)},
+                  ),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -240,7 +236,10 @@ class AnalysisSection extends StatelessWidget {
                   border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  'Stability ${regime.stabilityScore}/100',
+                  tr(
+                    'analysis.stability',
+                    namedArgs: {'score': regime.stabilityScore.toString()},
+                  ),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -252,7 +251,7 @@ class AnalysisSection extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            regime.currentRegime.description,
+            _regimeDescription(regime.currentRegime),
             style: TextStyle(fontSize: 12, color: AppColors.mutedForeground),
           ),
 
@@ -260,21 +259,21 @@ class AnalysisSection extends StatelessWidget {
 
           // Regime probability bars
           _buildRegimeProbBar(
-            'Low Vol',
+            tr('analysis.lowVol'),
             regime.regimeProbs[0],
             const Color(0xFF4ADE80),
             regime.currentRegime == VolatilityRegime.low,
           ),
           const SizedBox(height: 8),
           _buildRegimeProbBar(
-            'Trending',
+            tr('analysis.trending'),
             regime.regimeProbs[1],
             const Color(0xFFFACC15),
             regime.currentRegime == VolatilityRegime.medium,
           ),
           const SizedBox(height: 8),
           _buildRegimeProbBar(
-            'High Vol',
+            tr('analysis.highVol'),
             regime.regimeProbs[2],
             const Color(0xFFF87171),
             regime.currentRegime == VolatilityRegime.high,
@@ -286,19 +285,19 @@ class AnalysisSection extends StatelessWidget {
           Row(
             children: [
               _buildVolChip(
-                'Low',
+                tr('analysis.lowLabel'),
                 regime.regimeAnnualisedVols[0],
                 const Color(0xFF4ADE80),
               ),
               const SizedBox(width: 8),
               _buildVolChip(
-                'Med',
+                tr('analysis.medLabel'),
                 regime.regimeAnnualisedVols[1],
                 const Color(0xFFFACC15),
               ),
               const SizedBox(width: 8),
               _buildVolChip(
-                'High',
+                tr('analysis.highLabel'),
                 regime.regimeAnnualisedVols[2],
                 const Color(0xFFF87171),
               ),
@@ -322,7 +321,7 @@ class AnalysisSection extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  'Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC',
+                  tr('analysis.engineLabel'),
                   style: TextStyle(
                     fontSize: 10,
                     color: AppColors.mutedForeground.withValues(alpha: 0.6),
@@ -417,7 +416,7 @@ class AnalysisSection extends StatelessWidget {
               ),
             ),
             Text(
-              'Ann. Vol',
+              tr('analysis.annVol'),
               style: TextStyle(
                 fontSize: 9,
                 color: AppColors.mutedForeground.withValues(alpha: 0.6),
@@ -427,5 +426,27 @@ class AnalysisSection extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _regimeLabel(VolatilityRegime r) {
+    switch (r) {
+      case VolatilityRegime.low:
+        return tr('regime.lowVolatility');
+      case VolatilityRegime.medium:
+        return tr('regime.mediumVolatility');
+      case VolatilityRegime.high:
+        return tr('regime.highVolatility');
+    }
+  }
+
+  String _regimeDescription(VolatilityRegime r) {
+    switch (r) {
+      case VolatilityRegime.low:
+        return tr('regime.lowDescription');
+      case VolatilityRegime.medium:
+        return tr('regime.mediumDescription');
+      case VolatilityRegime.high:
+        return tr('regime.highDescription');
+    }
   }
 }

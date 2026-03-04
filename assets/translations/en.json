@@ -1,0 +1,128 @@
+{
+    "app": {
+        "title": "Market Monte",
+        "subtitle": "MCMC PREDICTION ENGINE"
+    },
+    "header": {
+        "market": "Market ",
+        "monte": "Monte"
+    },
+    "controls": {
+        "symbolSearch": "SYMBOL SEARCH",
+        "filterHint": "Filter pairs (e.g. SOL, ETH...)",
+        "investment": "INVESTMENT (USDT)",
+        "selectPair": "SELECT PAIR",
+        "selectPairHint": "Select a pair",
+        "analyze": "Analyze",
+        "timeHorizon": "TIME HORIZON",
+        "scanMarket": "Scan Market Leaders",
+        "proTip": "Pro Tip: ",
+        "proTipText": "Your investment amount & time horizon shape the Monte Carlo simulation for position sizing.",
+        "failedLoadPairs": "Failed to load pairs"
+    },
+    "pairStats": {
+        "currentPrice": "CURRENT PRICE",
+        "high24h": "24h High",
+        "low24h": "24h Low",
+        "volume": "Volume"
+    },
+    "analysis": {
+        "regimeDetection": "Regime Detection: {regime}",
+        "stability": "Stability {score}/100",
+        "lowVol": "Low Vol",
+        "trending": "Trending",
+        "highVol": "High Vol",
+        "lowLabel": "Low",
+        "medLabel": "Med",
+        "highLabel": "High",
+        "annVol": "Ann. Vol",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "outlook": "Outlook: {symbol}",
+        "recommendedPositions": "Recommended Positions",
+        "analysisError": "Analysis Error",
+        "bullish": "bullish",
+        "bearish": "bearish",
+        "summaryTemplate": "Hybrid Engine (Student-t HMM + PF + State-Space MC, {horizon} horizon, {paths} paths): {symbol} detected in {regime} regime ({confidence}% confidence, stability {stability}/100, entropy {entropy}%). Outlook is {trend} with regime-adjusted annualised vol {annVol}%. Median price ${median} (P25: ${p25}, P75: ${p75}). Skew {skew}, kurt {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservative): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%. Stability {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (aggressive): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Low-Vol",
+        "regimeTrendingShort": "Trending",
+        "regimeHighVolShort": "High-Vol",
+        "dirLong": "LONG",
+        "dirShort": "SHORT",
+        "limitBuy": "limit buy",
+        "limitSell": "limit sell",
+        "below": "below",
+        "above": "above"
+    },
+    "leaderboard": {
+        "globalScan": "Global Market Leaders Scan",
+        "topAlpha": "Top Alpha Opportunities",
+        "reasoningTemplate": "Regime-adaptive pick: {regime} regime detected (stability {stability}/100, entropy {entropy}%). {direction} position. Student-t HMM + PF engine, {paths} paths over {horizon}. EV: ${ev}.",
+        "globalOutlookTemplate": "Hybrid regime-aware scan ({horizon} horizon): Student-t HMM + PF + State-Space MC across {pairsCount} high-volume pairs. Market regime distribution: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leaders ranked by entropy-penalized expected value."
+    },
+    "position": {
+        "long": "LONG",
+        "short": "SHORT",
+        "rank": "RANK #{rank}",
+        "roiTarget": "ROI Target: ",
+        "entryPrice": "Entry Price",
+        "exitTarget": "Exit Target",
+        "stopLoss": "Stop Loss",
+        "expectedValue": "Expected Value",
+        "slProbability": "SL Probability",
+        "tpProbability": "TP Probability",
+        "size": "SIZE",
+        "quantityLabel": "{quantity} {asset}",
+        "forUsdt": "For ${amount} USDT",
+        "strategyOutlook": "STRATEGY OUTLOOK",
+        "tradeOn": "Trade on {exchange}"
+    },
+    "reminder": {
+        "setExitReminder": "Set Exit Reminder?",
+        "basedOnHorizon": "Based on your {horizon} horizon",
+        "closePosition": "Close {asset} position @ ${price}",
+        "closeBy": "Close by",
+        "exitTarget": "Exit target",
+        "roiTarget": "ROI target",
+        "skip": "Skip",
+        "addReminder": "Add Reminder",
+        "calendarTitle": "Close {asset} position – target ${price}",
+        "calendarDetails": "MarketMonte position reminder\n\nPair: {symbol}\nEntry: ${entry}\nExit target: ${exit}\nROI target: {roi}\nConfidence: {confidence}%\n\nStrategy: {strategy}"
+    },
+    "empty": {
+        "readyTitle": "Ready for analysis",
+        "readySubtitle": "Select a pair for deep analysis or scan the top 10 market leaders to find high-ROI breakouts."
+    },
+    "footer": {
+        "disclaimer": "MARKET MONTE IS AN ANALYTICAL TOOL. TRADING CRYPTOCURRENCIES INVOLVES RISK."
+    },
+    "regime": {
+        "lowVolatility": "Low Volatility",
+        "lowDescription": "Calm / Mean-Reverting",
+        "mediumVolatility": "Medium Volatility",
+        "mediumDescription": "Trending / Normal",
+        "highVolatility": "High Volatility",
+        "highDescription": "Turbulent / Crisis"
+    },
+    "timePeriod": {
+        "1H": "1 Hour",
+        "4H": "4 Hours",
+        "1D": "1 Day",
+        "1W": "1 Week",
+        "1M": "1 Month"
+    },
+    "settings": {
+        "title": "Settings",
+        "appearance": "Appearance",
+        "exchange": "Exchange",
+        "language": "Language",
+        "darkMode": "Dark Mode",
+        "lightMode": "Light Mode",
+        "versionFooter": "Market Monte v1.0.0 by Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "No historical data available for {symbol}",
+        "failedFetchSymbols": "Failed to fetch top market symbols"
+    }
+}

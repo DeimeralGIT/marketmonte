@@ -1,18 +1,28 @@
 import 'dart:math';
+import 'package:easy_localization/easy_localization.dart';
 import '../models/analysis_models.dart';
 import '../models/binance_models.dart';
-import 'binance_service.dart';
+import 'exchange_service.dart';
 import 'regime_detection_service.dart';
 
 class AnalysisService {
-  final BinanceService _binanceService;
+  ExchangeService _exchangeService;
 
-  AnalysisService(this._binanceService);
+  AnalysisService(this._exchangeService);
+
+  /// Swap the underlying exchange service (e.g. when user changes exchange).
+  void updateExchangeService(ExchangeService service) {
+    _exchangeService = service;
+  }
 
   static const int _numSim = 10000;
 
   /// Regime display names (indexed by state: 0=low, 1=med, 2=high).
-  static const _regimeNames = ['Low-Vol', 'Trending', 'High-Vol'];
+  static List<String> get _regimeNames => [
+    tr('analysis.regimeLowVolShort'),
+    tr('analysis.regimeTrendingShort'),
+    tr('analysis.regimeHighVolShort'),
+  ];
 
   /// Transaction cost per round-trip (2 × 0.1% taker fee).
   static const double _txCost = 0.002;
@@ -181,7 +191,9 @@ class AnalysisService {
     positions.sort((a, b) => b.expectedValue.compareTo(a.expectedValue));
 
     // ── 10. Build summary ──
-    final trendLabel = (p50 > currentPrice) ? 'bullish' : 'bearish';
+    final trendLabel = (p50 > currentPrice)
+        ? tr('analysis.bullish')
+        : tr('analysis.bearish');
     final regimeLabel = VolatilityRegime.values[currentRegime].label;
     final regimeProbPct = (regimeProbs[currentRegime] * 100).toStringAsFixed(0);
     final currentAnnVol = regimeAnnVols[currentRegime].toStringAsFixed(1);
@@ -191,19 +203,25 @@ class AnalysisService {
       positions: positions,
       regimeInfo: regimeInfo,
       distributionStats: distStats,
-      analysisSummary:
-          'Hybrid Engine (Student-t HMM + PF + State-Space MC, '
-          '${period.displayName} horizon, $_numSim paths): '
-          '$symbol detected in $regimeLabel regime ($regimeProbPct% '
-          'confidence, stability $stabilityScore/100, '
-          'entropy $entropyPct%). '
-          'Outlook is $trendLabel with regime-adjusted annualised vol '
-          '$currentAnnVol%. '
-          'Median price \$${p50.toStringAsFixed(2)} '
-          '(P25: \$${p25.toStringAsFixed(2)}, '
-          'P75: \$${p75.toStringAsFixed(2)}). '
-          'Skew ${skewness.toStringAsFixed(2)}, '
-          'kurt ${kurtosis.toStringAsFixed(2)}.',
+      analysisSummary: tr(
+        'analysis.summaryTemplate',
+        namedArgs: {
+          'horizon': period.displayName,
+          'paths': _numSim.toString(),
+          'symbol': symbol,
+          'regime': regimeLabel,
+          'confidence': regimeProbPct,
+          'stability': stabilityScore.toString(),
+          'entropy': entropyPct,
+          'trend': trendLabel,
+          'annVol': currentAnnVol,
+          'median': p50.toStringAsFixed(2),
+          'p25': p25.toStringAsFixed(2),
+          'p75': p75.toStringAsFixed(2),
+          'skew': skewness.toStringAsFixed(2),
+          'kurt': kurtosis.toStringAsFixed(2),
+        },
+      ),
     );
   }
 
@@ -453,30 +471,46 @@ class AnalysisService {
     final aggConf = (aggTpProb * 100).round().clamp(5, 95);
 
     // ── Strategy descriptions ──
-    final dirLabel = isLong ? 'LONG' : 'SHORT';
+    final dirLabel = isLong ? tr('analysis.dirLong') : tr('analysis.dirShort');
     final consDiscPct = ((consEntry - currentPrice).abs() / currentPrice * 100)
         .toStringAsFixed(2);
     final aggDiscPct = ((aggEntry - currentPrice).abs() / currentPrice * 100)
         .toStringAsFixed(2);
 
-    final consDesc =
-        '$regimeName $dirLabel (conservative): '
-        '${isLong ? "limit buy" : "limit sell"} $consDiscPct% '
-        '${isLong ? "below" : "above"} market. '
-        'TP barrier prob ${(consTpProb * 100).toStringAsFixed(1)}%, '
-        'SL barrier prob ${(consSlProb * 100).toStringAsFixed(1)}%. '
-        'EV \$${consEVAdj.toStringAsFixed(2)}. '
-        'Kelly ${(consKelly * 100).toStringAsFixed(1)}%. '
-        'Stability $stabilityScore/100.';
+    final consDesc = tr(
+      'analysis.strategyConservative',
+      namedArgs: {
+        'regime': regimeName,
+        'direction': dirLabel,
+        'orderType': isLong
+            ? tr('analysis.limitBuy')
+            : tr('analysis.limitSell'),
+        'discount': consDiscPct,
+        'side': isLong ? tr('analysis.below') : tr('analysis.above'),
+        'tpProb': (consTpProb * 100).toStringAsFixed(1),
+        'slProb': (consSlProb * 100).toStringAsFixed(1),
+        'ev': consEVAdj.toStringAsFixed(2),
+        'kelly': (consKelly * 100).toStringAsFixed(1),
+        'stability': stabilityScore.toString(),
+      },
+    );
 
-    final aggDesc =
-        '$regimeName $dirLabel (aggressive): '
-        '${isLong ? "limit buy" : "limit sell"} $aggDiscPct% '
-        '${isLong ? "below" : "above"} market. '
-        'TP barrier prob ${(aggTpProb * 100).toStringAsFixed(1)}%, '
-        'SL barrier prob ${(aggSlProb * 100).toStringAsFixed(1)}%. '
-        'EV \$${aggEVAdj.toStringAsFixed(2)}. '
-        'Kelly ${(aggKelly * 100).toStringAsFixed(1)}%.';
+    final aggDesc = tr(
+      'analysis.strategyAggressive',
+      namedArgs: {
+        'regime': regimeName,
+        'direction': dirLabel,
+        'orderType': isLong
+            ? tr('analysis.limitBuy')
+            : tr('analysis.limitSell'),
+        'discount': aggDiscPct,
+        'side': isLong ? tr('analysis.below') : tr('analysis.above'),
+        'tpProb': (aggTpProb * 100).toStringAsFixed(1),
+        'slProb': (aggSlProb * 100).toStringAsFixed(1),
+        'ev': aggEVAdj.toStringAsFixed(2),
+        'kelly': (aggKelly * 100).toStringAsFixed(1),
+      },
+    );
 
     // ── Trade acceptance filter ──
     // Accept if: EV_adj > 0 AND TP_prob > 0.40 (or forceInclude)
@@ -537,12 +571,14 @@ class AnalysisService {
     final limit = period.hours <= 24
         ? 168
         : (period.hours * 2).ceil().clamp(168, 720);
-    final klines = await _binanceService.fetchHistoricalKlines(
+    final klines = await _exchangeService.fetchHistoricalKlines(
       symbol,
       limit: limit,
     );
     if (klines.isEmpty) {
-      throw Exception('No historical data available for $symbol');
+      throw Exception(
+        tr('errors.noHistoricalData', namedArgs: {'symbol': symbol}),
+      );
     }
     return _runHybridEngine(symbol, klines, period);
   }
@@ -552,16 +588,16 @@ class AnalysisService {
   Future<MarketLeaderboardResult> scanTopMarket({
     TimePeriod period = TimePeriod.oneDay,
   }) async {
-    final topSymbols = await _binanceService.fetchTopUSDTByVolume(limit: 10);
+    final topSymbols = await _exchangeService.fetchTopUSDTByVolume(limit: 10);
     if (topSymbols.isEmpty) {
-      throw Exception('Failed to fetch top market symbols');
+      throw Exception(tr('errors.failedFetchSymbols'));
     }
 
     final List<_AnalyzedPair> analyzedPairs = [];
 
     for (final symbol in topSymbols) {
       try {
-        final klines = await _binanceService.fetchHistoricalKlines(
+        final klines = await _exchangeService.fetchHistoricalKlines(
           symbol,
           limit: 168,
         );
@@ -611,13 +647,18 @@ class AnalysisService {
         predictedROI: p.topPosition.predictedROI,
         confidenceScore: p.topPosition.confidenceScore,
         expectedValue: p.topPosition.expectedValue,
-        reasoning:
-            'Regime-adaptive pick: $regLabel regime detected '
-            '(stability $stability/100, entropy $entropyPct%). '
-            '${p.topPosition.direction.label} position. '
-            'Student-t HMM + PF engine, $_numSim paths over '
-            '${period.displayName}. '
-            'EV: \$${p.topPosition.expectedValue.toStringAsFixed(2)}.',
+        reasoning: tr(
+          'leaderboard.reasoningTemplate',
+          namedArgs: {
+            'regime': regLabel,
+            'stability': stability.toString(),
+            'entropy': entropyPct,
+            'direction': p.topPosition.direction.label,
+            'paths': _numSim.toString(),
+            'horizon': period.displayName,
+            'ev': p.topPosition.expectedValue.toStringAsFixed(2),
+          },
+        ),
       );
     }).toList();
 
@@ -638,13 +679,19 @@ class AnalysisService {
 
     return MarketLeaderboardResult(
       topPicks: topPicks,
-      globalOutlook:
-          'Hybrid regime-aware scan (${period.displayName} horizon): '
-          'Student-t HMM + PF + State-Space MC across '
-          '${analyzedPairs.length} high-volume pairs. '
-          'Market regime distribution: $lowCount low-vol, $medCount '
-          'trending, $highCount high-vol. '
-          'Leaders ranked by entropy-penalized expected value.',
+      globalOutlook: tr(
+        'leaderboard.globalOutlookTemplate',
+        namedArgs: {
+          'horizon': period.displayName,
+          'pairsCount': analyzedPairs.length.toString(),
+          'lowCount': lowCount.toString(),
+          'lowVolLabel': tr('analysis.regimeLowVolShort').toLowerCase(),
+          'medCount': medCount.toString(),
+          'trendingLabel': tr('analysis.regimeTrendingShort').toLowerCase(),
+          'highCount': highCount.toString(),
+          'highVolLabel': tr('analysis.regimeHighVolShort').toLowerCase(),
+        },
+      ),
     );
   }
 }

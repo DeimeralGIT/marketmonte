@@ -1,24 +1,43 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/binance_models.dart';
 import '../models/analysis_models.dart';
-import '../services/binance_service.dart';
+import '../models/exchange_models.dart';
+import '../services/exchange_service.dart';
 import '../services/analysis_service.dart';
+import '../services/exchanges/binance_exchange_service.dart';
+import '../services/exchanges/coinbase_exchange_service.dart';
+import '../services/exchanges/mexc_exchange_service.dart';
+import 'exchange_provider.dart';
 
 // --- Service Providers ---
 
-final binanceServiceProvider = Provider<BinanceService>((ref) {
-  return BinanceService();
+/// Returns the correct ExchangeService for the currently selected exchange.
+ExchangeService exchangeServiceFor(Exchange exchange) {
+  switch (exchange) {
+    case Exchange.binance:
+      return BinanceExchangeService();
+    case Exchange.coinbase:
+      return CoinbaseExchangeService();
+    case Exchange.mexc:
+      return MexcExchangeService();
+  }
+}
+
+final exchangeServiceProvider = Provider<ExchangeService>((ref) {
+  final exchange = ref.watch(exchangeProvider);
+  return exchangeServiceFor(exchange);
 });
 
 final analysisServiceProvider = Provider<AnalysisService>((ref) {
-  return AnalysisService(ref.read(binanceServiceProvider));
+  final exchangeService = ref.watch(exchangeServiceProvider);
+  return AnalysisService(exchangeService);
 });
 
 // --- Pairs Provider ---
 
 final pairsProvider = FutureProvider<List<BinancePair>>((ref) async {
-  final binanceService = ref.read(binanceServiceProvider);
-  return binanceService.fetchUSDTTradingPairs();
+  final exchangeService = ref.watch(exchangeServiceProvider);
+  return exchangeService.fetchUSDTTradingPairs();
 });
 
 // --- Active Tab Enum ---
@@ -37,6 +56,7 @@ class MarketState {
   final CryptoAnalysisResult? analysis;
   final MarketLeaderboardResult? leaderboard;
   final Map<String, dynamic>? ticker;
+  final bool tickerLoading;
   final ActiveTab activeTab;
 
   const MarketState({
@@ -49,6 +69,7 @@ class MarketState {
     this.analysis,
     this.leaderboard,
     this.ticker,
+    this.tickerLoading = false,
     this.activeTab = ActiveTab.single,
   });
 
@@ -62,6 +83,7 @@ class MarketState {
     CryptoAnalysisResult? analysis,
     MarketLeaderboardResult? leaderboard,
     Map<String, dynamic>? ticker,
+    bool? tickerLoading,
     ActiveTab? activeTab,
     bool clearError = false,
     bool clearAnalysis = false,
@@ -78,6 +100,7 @@ class MarketState {
       analysis: clearAnalysis ? null : (analysis ?? this.analysis),
       leaderboard: clearLeaderboard ? null : (leaderboard ?? this.leaderboard),
       ticker: clearTicker ? null : (ticker ?? this.ticker),
+      tickerLoading: tickerLoading ?? this.tickerLoading,
       activeTab: activeTab ?? this.activeTab,
     );
   }
@@ -86,14 +109,32 @@ class MarketState {
 // --- Market State Notifier ---
 
 class MarketStateNotifier extends StateNotifier<MarketState> {
-  final BinanceService _binanceService;
+  final ExchangeService _exchangeService;
   final AnalysisService _analysisService;
 
-  MarketStateNotifier(this._binanceService, this._analysisService)
+  MarketStateNotifier(this._exchangeService, this._analysisService)
     : super(const MarketState());
 
   void setSelectedPair(String pair) {
-    state = state.copyWith(selectedPair: pair);
+    state = state.copyWith(selectedPair: pair, tickerLoading: true);
+    _fetchTicker(pair);
+  }
+
+  Future<void> _fetchTicker(String pair) async {
+    try {
+      final ticker = await _exchangeService.fetch24hTicker(pair);
+      if (!mounted) return;
+      // Only apply if the pair is still the selected one
+      if (ticker != null && state.selectedPair == pair) {
+        state = state.copyWith(ticker: ticker, tickerLoading: false);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      // Clear loading even on error
+      if (state.selectedPair == pair) {
+        state = state.copyWith(tickerLoading: false);
+      }
+    }
   }
 
   void setSearchQuery(String query) {
@@ -123,7 +164,7 @@ class MarketStateNotifier extends StateNotifier<MarketState> {
           state.selectedPair,
           period: state.timePeriod,
         ),
-        _binanceService.fetch24hTicker(state.selectedPair),
+        _exchangeService.fetch24hTicker(state.selectedPair),
       ]);
 
       final analysisResult = results[0] as CryptoAnalysisResult;
@@ -159,11 +200,32 @@ class MarketStateNotifier extends StateNotifier<MarketState> {
     }
   }
 
-  /// Initialize with default ticker data.
+  /// Initialize: fetch pairs from the exchange, select the first one,
+  /// and load its ticker.
   Future<void> init() async {
-    final ticker = await _binanceService.fetch24hTicker('BTCUSDT');
-    if (ticker != null) {
-      state = state.copyWith(ticker: ticker);
+    // Immediately clear old data so the UI doesn't show stale info
+    state = state.copyWith(
+      tickerLoading: true,
+      clearTicker: true,
+      clearAnalysis: true,
+      clearLeaderboard: true,
+      clearError: true,
+    );
+    try {
+      final pairs = await _exchangeService.fetchUSDTTradingPairs();
+      if (!mounted) return;
+      final firstSymbol = pairs.isNotEmpty ? pairs.first.symbol : 'BTCUSDT';
+      state = state.copyWith(selectedPair: firstSymbol);
+      final ticker = await _exchangeService.fetch24hTicker(firstSymbol);
+      if (!mounted) return;
+      if (ticker != null && state.selectedPair == firstSymbol) {
+        state = state.copyWith(ticker: ticker, tickerLoading: false);
+      } else {
+        state = state.copyWith(tickerLoading: false);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      state = state.copyWith(tickerLoading: false);
     }
   }
 }
@@ -172,7 +234,11 @@ class MarketStateNotifier extends StateNotifier<MarketState> {
 
 final marketStateProvider =
     StateNotifierProvider<MarketStateNotifier, MarketState>((ref) {
-      final binanceService = ref.read(binanceServiceProvider);
+      final exchangeService = ref.watch(exchangeServiceProvider);
       final analysisService = ref.read(analysisServiceProvider);
-      return MarketStateNotifier(binanceService, analysisService);
+      final notifier = MarketStateNotifier(exchangeService, analysisService);
+      // Auto-initialize whenever the provider is (re-)created
+      // (e.g. on exchange change).
+      notifier.init();
+      return notifier;
     });

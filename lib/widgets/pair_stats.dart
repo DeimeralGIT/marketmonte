@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import '../utils/crypto_names.dart';
+import 'crypto_icon.dart';
 
 class PairStats extends StatelessWidget {
   final Map<String, dynamic> ticker;
@@ -48,31 +51,34 @@ class PairStats extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.accent.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    LucideIcons.lineChart,
-                    size: 20,
-                    color: AppColors.accent,
-                  ),
-                ),
+                CryptoIcon(symbol: symbol, size: 40),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'CURRENT PRICE',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.8,
-                          color: AppColors.mutedForeground,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            baseAsset,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.foreground,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              cryptoName(symbol),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.mutedForeground,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 2),
                       FittedBox(
@@ -80,7 +86,7 @@ class PairStats extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           '\$${formatPrice(lastPrice)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'monospace',
@@ -154,21 +160,21 @@ class PairStats extends StatelessWidget {
                 _StatChip(
                   icon: LucideIcons.arrowUp,
                   iconColor: const Color(0xFF4ADE80),
-                  label: '24h High',
+                  label: tr('pairStats.high24h'),
                   value: '\$${formatPrice(highPrice)}',
                 ),
                 const SizedBox(width: 8),
                 _StatChip(
                   icon: LucideIcons.arrowDown,
                   iconColor: const Color(0xFFF87171),
-                  label: '24h Low',
+                  label: tr('pairStats.low24h'),
                   value: '\$${formatPrice(lowPrice)}',
                 ),
                 const SizedBox(width: 8),
                 _StatChip(
                   icon: LucideIcons.barChart3,
                   iconColor: AppColors.accent,
-                  label: 'Volume',
+                  label: tr('pairStats.volume'),
                   value: '${formatVolume(volume)} $baseAsset',
                 ),
                 // Trailing space so last chip doesn't hug the edge
@@ -215,7 +221,7 @@ class _StatChip extends StatelessWidget {
             children: [
               Text(
                 label.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 8,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
@@ -225,7 +231,7 @@ class _StatChip extends StatelessWidget {
               const SizedBox(height: 1),
               Text(
                 value,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'monospace',
@@ -233,6 +239,154 @@ class _StatChip extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Skeleton loader – shown while new ticker data is being fetched
+// ─────────────────────────────────────────────────────────────────────────────
+
+class PairStatsSkeleton extends StatefulWidget {
+  const PairStatsSkeleton({super.key});
+
+  @override
+  State<PairStatsSkeleton> createState() => _PairStatsSkeletonState();
+}
+
+class _PairStatsSkeletonState extends State<PairStatsSkeleton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(
+      begin: 0.3,
+      end: 0.7,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _bone({double width = 80, double height = 14, double radius = 6}) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (_, __) => Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          color: AppColors.mutedForeground.withValues(
+            alpha: _animation.value * 0.25,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Main hero skeleton ──
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.secondary.withValues(alpha: 0.5),
+                  AppColors.secondary.withValues(alpha: 0.2),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.5),
+              ),
+            ),
+            child: Row(
+              children: [
+                // Icon placeholder (circle)
+                _bone(width: 40, height: 40, radius: 20),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Name line
+                      _bone(width: 100, height: 14, radius: 6),
+                      const SizedBox(height: 8),
+                      // Price line
+                      _bone(width: 160, height: 24, radius: 6),
+                    ],
+                  ),
+                ),
+                // Percent badge placeholder
+                _bone(width: 72, height: 28, radius: 8),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── Stat chips skeleton ──
+          SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                Expanded(child: _chipBone()),
+                const SizedBox(width: 8),
+                Expanded(child: _chipBone()),
+                const SizedBox(width: 8),
+                Expanded(child: _chipBone()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _chipBone() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.secondary.withValues(alpha: 0.25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          _bone(width: 14, height: 14, radius: 7),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _bone(width: 40, height: 8, radius: 4),
+                const SizedBox(height: 4),
+                _bone(width: 60, height: 12, radius: 4),
+              ],
+            ),
           ),
         ],
       ),

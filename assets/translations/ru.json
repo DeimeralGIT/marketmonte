@@ -1,0 +1,128 @@
+{
+    "app": {
+        "title": "Market Monte",
+        "subtitle": "ДВИЖОК ПРОГНОЗОВ MCMC"
+    },
+    "header": {
+        "market": "Market ",
+        "monte": "Monte"
+    },
+    "controls": {
+        "symbolSearch": "ПОИСК СИМВОЛА",
+        "filterHint": "Фильтр пар (напр. SOL, ETH...)",
+        "investment": "ИНВЕСТИЦИЯ (USDT)",
+        "selectPair": "ВЫБРАТЬ ПАРУ",
+        "selectPairHint": "Выберите пару",
+        "analyze": "Анализ",
+        "timeHorizon": "ВРЕМЕННОЙ ГОРИЗОНТ",
+        "scanMarket": "Сканировать лидеров",
+        "proTip": "Совет: ",
+        "proTipText": "Сумма инвестиций и временной горизонт определяют симуляцию Монте-Карло для размера позиции.",
+        "failedLoadPairs": "Не удалось загрузить пары"
+    },
+    "pairStats": {
+        "currentPrice": "ТЕКУЩАЯ ЦЕНА",
+        "high24h": "Макс. 24ч",
+        "low24h": "Мин. 24ч",
+        "volume": "Объём"
+    },
+    "analysis": {
+        "regimeDetection": "Определение режима: {regime}",
+        "stability": "Стабильность {score}/100",
+        "lowVol": "Низ. вол.",
+        "trending": "Тренд",
+        "highVol": "Выс. вол.",
+        "lowLabel": "Низ.",
+        "medLabel": "Сред.",
+        "highLabel": "Выс.",
+        "annVol": "Год. вол.",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "outlook": "Прогноз: {symbol}",
+        "recommendedPositions": "Рекомендованные позиции",
+        "analysisError": "Ошибка анализа",
+        "bullish": "бычий",
+        "bearish": "медвежий",
+        "summaryTemplate": "Гибридный движок (Student-t HMM + PF + State-Space MC, горизонт {horizon}, {paths} путей): {symbol} обнаружен в режиме {regime} ({confidence}% уверенность, стабильность {stability}/100, энтропия {entropy}%). Прогноз {trend} с режим-скорректированной годовой волатильностью {annVol}%. Медианная цена ${median} (P25: ${p25}, P75: ${p75}). Асимметрия {skew}, эксцесс {kurt}.",
+        "strategyConservative": "{regime} {direction} (консервативная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%. Стабильность {stability}/100.",
+        "strategyAggressive": "{regime} {direction} (агрессивная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "regimeLowVolShort": "Низ-Вол",
+        "regimeTrendingShort": "Тренд",
+        "regimeHighVolShort": "Выс-Вол",
+        "dirLong": "ЛОНГ",
+        "dirShort": "ШОРТ",
+        "limitBuy": "лимитная покупка",
+        "limitSell": "лимитная продажа",
+        "below": "ниже",
+        "above": "выше"
+    },
+    "leaderboard": {
+        "globalScan": "Глобальное сканирование лидеров рынка",
+        "topAlpha": "Лучшие альфа-возможности",
+        "reasoningTemplate": "Режим-адаптивный выбор: обнаружен режим {regime} (стабильность {stability}/100, энтропия {entropy}%). Позиция {direction}. Student-t HMM + PF, {paths} путей за {horizon}. EV: ${ev}.",
+        "globalOutlookTemplate": "Гибридное режим-осведомлённое сканирование (горизонт {horizon}): Student-t HMM + PF + State-Space MC по {pairsCount} высокообъёмным парам. Распределение режимов: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Лидеры ранжированы по энтропия-штрафованному ожидаемому значению."
+    },
+    "position": {
+        "long": "ЛОНГ",
+        "short": "ШОРТ",
+        "rank": "РАНГ #{rank}",
+        "roiTarget": "Цель ROI: ",
+        "entryPrice": "Цена входа",
+        "exitTarget": "Цель выхода",
+        "stopLoss": "Стоп-лосс",
+        "expectedValue": "Ожидаемая стоимость",
+        "slProbability": "Вероятность SL",
+        "tpProbability": "Вероятность TP",
+        "size": "РАЗМЕР",
+        "quantityLabel": "{quantity} {asset}",
+        "forUsdt": "На ${amount} USDT",
+        "strategyOutlook": "СТРАТЕГИЯ",
+        "tradeOn": "Торговать на {exchange}"
+    },
+    "reminder": {
+        "setExitReminder": "Установить напоминание?",
+        "basedOnHorizon": "На основе горизонта {horizon}",
+        "closePosition": "Закрыть {asset} позицию @ ${price}",
+        "closeBy": "Закрыть до",
+        "exitTarget": "Цель выхода",
+        "roiTarget": "Цель ROI",
+        "skip": "Пропустить",
+        "addReminder": "Напоминание",
+        "calendarTitle": "Закрыть позицию {asset} – цель ${price}",
+        "calendarDetails": "Напоминание MarketMonte\n\nПара: {symbol}\nВход: ${entry}\nЦель выхода: ${exit}\nЦель ROI: {roi}\nУверенность: {confidence}%\n\nСтратегия: {strategy}"
+    },
+    "empty": {
+        "readyTitle": "Готов к анализу",
+        "readySubtitle": "Выберите пару для глубокого анализа или просканируйте 10 лидеров рынка для поиска прорывов с высоким ROI."
+    },
+    "footer": {
+        "disclaimer": "MARKET MONTE — АНАЛИТИЧЕСКИЙ ИНСТРУМЕНТ. ТОРГОВЛЯ КРИПТОВАЛЮТАМИ СОПРЯЖЕНА С РИСКОМ."
+    },
+    "regime": {
+        "lowVolatility": "Низкая волатильность",
+        "lowDescription": "Спокойный / Возврат к среднему",
+        "mediumVolatility": "Средняя волатильность",
+        "mediumDescription": "Трендовый / Нормальный",
+        "highVolatility": "Высокая волатильность",
+        "highDescription": "Турбулентный / Кризисный"
+    },
+    "timePeriod": {
+        "1H": "1 час",
+        "4H": "4 часа",
+        "1D": "1 день",
+        "1W": "1 неделя",
+        "1M": "1 месяц"
+    },
+    "settings": {
+        "title": "Настройки",
+        "appearance": "Оформление",
+        "exchange": "Биржа",
+        "language": "Язык",
+        "darkMode": "Тёмная тема",
+        "lightMode": "Светлая тема",
+        "versionFooter": "Market Monte v1.0.0 от Deimeral"
+    },
+    "errors": {
+        "noHistoricalData": "Нет исторических данных для {symbol}",
+        "failedFetchSymbols": "Не удалось получить топ символы рынка"
+    }
+}
