@@ -223,6 +223,20 @@ class MarketStateNotifier extends StateNotifier<MarketState> {
     }
   }
 
+  /// Refresh current data: re-fetch ticker and, if an analysis/leaderboard
+  /// was already computed, re-run it with the same parameters.
+  Future<void> refresh({bool ludomaniaMode = false}) async {
+    if (state.activeTab == ActiveTab.market && state.leaderboard != null) {
+      await scanMarket();
+    } else if (state.analysis != null) {
+      await analyzePair(ludomaniaMode: ludomaniaMode);
+    } else {
+      // No analysis yet — just refresh the ticker
+      state = state.copyWith(tickerLoading: true);
+      await _fetchTicker(state.selectedPair);
+    }
+  }
+
   /// Initialize: fetch pairs from the exchange, select the first one,
   /// and load its ticker.
   Future<void> init() async {

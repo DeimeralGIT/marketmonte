@@ -45,81 +45,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           AppHeader(),
           // Scrollable content
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 16),
+            child: RefreshIndicator(
+              color: AppColors.accent,
+              backgroundColor: AppColors.card,
+              onRefresh: () {
+                final ludomania = ref.read(ludomaniaProvider);
+                return ref
+                    .read(marketStateProvider.notifier)
+                    .refresh(ludomaniaMode: ludomania);
+              },
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 900),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
 
-                      // Controls card
-                      ControlsCard(),
+                        // Controls card
+                        ControlsCard(),
 
-                      const SizedBox(height: 24),
-
-                      // Error banner
-                      if (marketState.error != null) ...[
-                        _buildErrorBanner(marketState.error!),
                         const SizedBox(height: 24),
-                      ],
 
-                      // Pair stats (single analysis tab)
-                      if (marketState.tickerLoading &&
-                          marketState.activeTab == ActiveTab.single)
-                        const PairStatsSkeleton()
-                      else if (marketState.ticker != null &&
-                          marketState.activeTab == ActiveTab.single)
-                        PairStats(
-                          ticker: marketState.ticker!,
-                          symbol: marketState.selectedPair,
-                        ),
+                        // Error banner
+                        if (marketState.error != null) ...[
+                          _buildErrorBanner(marketState.error!),
+                          const SizedBox(height: 24),
+                        ],
 
-                      // Single pair analysis results
-                      if (marketState.analysis != null &&
-                          marketState.activeTab == ActiveTab.single) ...[
-                        AnalysisSection(
-                          analysis: marketState.analysis!,
-                          symbol: marketState.selectedPair,
-                          investmentAmount: marketState.investmentAmount,
-                          timePeriod: marketState.timePeriod,
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                        // Pair stats (single analysis tab)
+                        if (marketState.tickerLoading &&
+                            marketState.activeTab == ActiveTab.single)
+                          const PairStatsSkeleton()
+                        else if (marketState.ticker != null &&
+                            marketState.activeTab == ActiveTab.single)
+                          PairStats(
+                            ticker: marketState.ticker!,
+                            symbol: marketState.selectedPair,
+                          ),
 
-                      // Market leaderboard results
-                      if (marketState.leaderboard != null &&
-                          marketState.activeTab == ActiveTab.market) ...[
-                        LeaderboardSection(
-                          leaderboard: marketState.leaderboard!,
-                          investmentAmount: marketState.investmentAmount,
-                          timePeriod: marketState.timePeriod,
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                        // Single pair analysis results
+                        if (marketState.analysis != null &&
+                            marketState.activeTab == ActiveTab.single) ...[
+                          AnalysisSection(
+                            analysis: marketState.analysis!,
+                            symbol: marketState.selectedPair,
+                            investmentAmount: marketState.investmentAmount,
+                            timePeriod: marketState.timePeriod,
+                          ),
+                          const SizedBox(height: 24),
+                        ],
 
-                      // Loading indicator
-                      if (marketState.loading)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 40),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: AppColors.accent,
+                        // Market leaderboard results
+                        if (marketState.leaderboard != null &&
+                            marketState.activeTab == ActiveTab.market) ...[
+                          LeaderboardSection(
+                            leaderboard: marketState.leaderboard!,
+                            investmentAmount: marketState.investmentAmount,
+                            timePeriod: marketState.timePeriod,
+                          ),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Loading indicator
+                        if (marketState.loading)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 40),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.accent,
+                              ),
                             ),
                           ),
-                        ),
 
-                      // Empty state
-                      if (!marketState.loading &&
-                          marketState.analysis == null &&
-                          marketState.leaderboard == null)
-                        EmptyState(),
+                        // Empty state
+                        if (!marketState.loading &&
+                            marketState.analysis == null &&
+                            marketState.leaderboard == null)
+                          EmptyState(),
 
-                      // Footer
-                      AppFooter(),
-                    ],
+                        // Footer
+                        AppFooter(),
+                      ],
+                    ),
                   ),
                 ),
               ),
