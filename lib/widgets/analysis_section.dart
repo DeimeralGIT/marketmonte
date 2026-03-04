@@ -132,61 +132,105 @@ class AnalysisSection extends StatelessWidget {
         // Position cards
         LayoutBuilder(
           builder: (context, constraints) {
+            // Separate regular and ludomania positions
+            final regularPositions = analysis.positions
+                .where((p) => !p.isLudomania)
+                .toList();
+            final ludomaniaPositions = analysis.positions
+                .where((p) => p.isLudomania)
+                .toList();
+
+            final List<Widget> children = [];
+
             if (constraints.maxWidth > 600) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: analysis.positions.asMap().entries.map((entry) {
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: entry.key > 0 ? 12 : 0),
-                      child: PositionCard(
-                        rank: entry.key + 1,
-                        symbol: symbol,
-                        investmentAmount: investmentAmount,
-                        timePeriod: timePeriod,
-                        direction: entry.value.direction,
-                        entryPrice: entry.value.entryPrice,
-                        exitPrice: entry.value.exitPrice,
-                        stopLoss: entry.value.stopLoss,
-                        predictedROI: entry.value.predictedROI,
-                        confidenceScore: entry.value.confidenceScore,
-                        tpProbability: entry.value.tpProbability,
-                        slProbability: entry.value.slProbability,
-                        expectedValue: entry.value.expectedValue,
-                        positionSizePct: entry.value.positionSizePct,
-                        strategyDescription: entry.value.strategyDescription,
+              children.add(
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: regularPositions.asMap().entries.map((entry) {
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: entry.key > 0 ? 12 : 0),
+                        child: PositionCard(
+                          rank: entry.key + 1,
+                          symbol: symbol,
+                          investmentAmount: investmentAmount,
+                          timePeriod: timePeriod,
+                          direction: entry.value.direction,
+                          entryPrice: entry.value.entryPrice,
+                          exitPrice: entry.value.exitPrice,
+                          stopLoss: entry.value.stopLoss,
+                          predictedROI: entry.value.predictedROI,
+                          confidenceScore: entry.value.confidenceScore,
+                          tpProbability: entry.value.tpProbability,
+                          slProbability: entry.value.slProbability,
+                          expectedValue: entry.value.expectedValue,
+                          positionSizePct: entry.value.positionSizePct,
+                          strategyDescription: entry.value.strategyDescription,
+                          isLudomania: entry.value.isLudomania,
+                        ),
                       ),
+                    );
+                  }).toList(),
+                ),
+              );
+            } else {
+              children.addAll(
+                regularPositions.asMap().entries.map((entry) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      bottom: entry.key < regularPositions.length - 1 ? 16 : 0,
+                    ),
+                    child: PositionCard(
+                      rank: entry.key + 1,
+                      symbol: symbol,
+                      investmentAmount: investmentAmount,
+                      timePeriod: timePeriod,
+                      direction: entry.value.direction,
+                      entryPrice: entry.value.entryPrice,
+                      exitPrice: entry.value.exitPrice,
+                      stopLoss: entry.value.stopLoss,
+                      predictedROI: entry.value.predictedROI,
+                      confidenceScore: entry.value.confidenceScore,
+                      tpProbability: entry.value.tpProbability,
+                      slProbability: entry.value.slProbability,
+                      expectedValue: entry.value.expectedValue,
+                      positionSizePct: entry.value.positionSizePct,
+                      strategyDescription: entry.value.strategyDescription,
+                      isLudomania: entry.value.isLudomania,
                     ),
                   );
-                }).toList(),
+                }),
               );
             }
-            return Column(
-              children: analysis.positions.asMap().entries.map((entry) {
-                return Padding(
-                  padding: EdgeInsets.only(
-                    bottom: entry.key < analysis.positions.length - 1 ? 16 : 0,
-                  ),
+
+            // Ludomania position(s) — always full width below
+            for (final ludo in ludomaniaPositions) {
+              children.add(
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
                   child: PositionCard(
-                    rank: entry.key + 1,
+                    rank: regularPositions.length + 1,
                     symbol: symbol,
                     investmentAmount: investmentAmount,
                     timePeriod: timePeriod,
-                    direction: entry.value.direction,
-                    entryPrice: entry.value.entryPrice,
-                    exitPrice: entry.value.exitPrice,
-                    stopLoss: entry.value.stopLoss,
-                    predictedROI: entry.value.predictedROI,
-                    confidenceScore: entry.value.confidenceScore,
-                    tpProbability: entry.value.tpProbability,
-                    slProbability: entry.value.slProbability,
-                    expectedValue: entry.value.expectedValue,
-                    positionSizePct: entry.value.positionSizePct,
-                    strategyDescription: entry.value.strategyDescription,
+                    direction: ludo.direction,
+                    entryPrice: ludo.entryPrice,
+                    exitPrice: ludo.exitPrice,
+                    stopLoss: ludo.stopLoss,
+                    predictedROI: ludo.predictedROI,
+                    confidenceScore: ludo.confidenceScore,
+                    tpProbability: ludo.tpProbability,
+                    slProbability: ludo.slProbability,
+                    expectedValue: ludo.expectedValue,
+                    positionSizePct: ludo.positionSizePct,
+                    strategyDescription: ludo.strategyDescription,
+                    isLudomania: true,
                   ),
-                );
-              }).toList(),
-            );
+                ),
+              );
+            }
+
+            return Column(children: children);
           },
         ),
       ],

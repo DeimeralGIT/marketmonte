@@ -154,6 +154,7 @@ class TradingPosition {
   final double expectedValue;
   final double positionSizePct;
   final String strategyDescription;
+  final bool isLudomania;
 
   TradingPosition({
     required this.direction,
@@ -167,6 +168,7 @@ class TradingPosition {
     required this.expectedValue,
     required this.positionSizePct,
     required this.strategyDescription,
+    this.isLudomania = false,
   });
 
   factory TradingPosition.fromJson(Map<String, dynamic> json) {
@@ -182,6 +184,7 @@ class TradingPosition {
       expectedValue: (json['expectedValue'] as num?)?.toDouble() ?? 0.0,
       positionSizePct: (json['positionSizePct'] as num?)?.toDouble() ?? 0.0,
       strategyDescription: json['strategyDescription'] as String,
+      isLudomania: json['isLudomania'] as bool? ?? false,
     );
   }
 
@@ -197,6 +200,7 @@ class TradingPosition {
     'expectedValue': expectedValue,
     'positionSizePct': positionSizePct,
     'strategyDescription': strategyDescription,
+    'isLudomania': isLudomania,
   };
 }
 

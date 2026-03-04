@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import '../theme/app_theme.dart';
 import '../providers/market_providers.dart';
 import '../providers/theme_provider.dart';
+import '../providers/ludomania_provider.dart';
 import '../widgets/app_header.dart';
 import '../widgets/controls_card.dart';
 import '../widgets/pair_stats.dart';
@@ -29,6 +30,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.watch(themeProvider);
     // Register as dependent on locale so the tree rebuilds on language change
     context.locale;
+
+    // React to ludomania toggle: add/remove YOLO position immediately
+    ref.listen<bool>(ludomaniaProvider, (previous, next) {
+      ref.read(marketStateProvider.notifier).applyLudomaniaMode(next);
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,

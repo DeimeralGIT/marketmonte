@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../providers/theme_provider.dart';
 import '../models/exchange_models.dart';
 import '../providers/exchange_provider.dart';
+import '../providers/ludomania_provider.dart';
 
 class SettingsDrawer extends ConsumerWidget {
   const SettingsDrawer({super.key});
@@ -25,6 +26,7 @@ class SettingsDrawer extends ConsumerWidget {
     final isDark = themeMode == ThemeMode.dark;
     final currentLocale = context.locale;
     final selectedExchange = ref.watch(exchangeProvider);
+    final isLudomania = ref.watch(ludomaniaProvider);
 
     return Drawer(
       backgroundColor: AppColors.card,
@@ -75,6 +77,17 @@ class SettingsDrawer extends ConsumerWidget {
               child: _ThemeToggle(
                 isDark: isDark,
                 onToggle: () => ref.read(themeProvider.notifier).toggle(),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ── Ludomania mode toggle ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _LudomaniaToggle(
+                isEnabled: isLudomania,
+                onToggle: () => ref.read(ludomaniaProvider.notifier).toggle(),
               ),
             ),
 
@@ -234,6 +247,106 @@ class _ThemeToggle extends StatelessWidget {
                         shape: BoxShape.circle,
                         color: isDark
                             ? AppColors.accent
+                            : AppColors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LudomaniaToggle extends StatelessWidget {
+  final bool isEnabled;
+  final VoidCallback onToggle;
+  const _LudomaniaToggle({required this.isEnabled, required this.onToggle});
+
+  static const _ludomaniaOrange = Color(0xFFFFA726);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isEnabled
+            ? _ludomaniaOrange.withValues(alpha: 0.08)
+            : AppColors.secondary,
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+        border: Border.all(
+          color: isEnabled
+              ? _ludomaniaOrange.withValues(alpha: 0.4)
+              : AppColors.border,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onToggle,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.flame,
+                  size: 18,
+                  color: isEnabled
+                      ? _ludomaniaOrange
+                      : AppColors.mutedForeground,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tr('settings.ludomania'),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: isEnabled
+                              ? _ludomaniaOrange
+                              : AppColors.foreground,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        tr('settings.ludomaniaDescription'),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: AppColors.mutedForeground,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  width: 44,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(13),
+                    color: isEnabled
+                        ? _ludomaniaOrange.withValues(alpha: 0.3)
+                        : AppColors.muted,
+                  ),
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    alignment: isEnabled
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isEnabled
+                            ? _ludomaniaOrange
                             : AppColors.mutedForeground,
                       ),
                     ),

@@ -28,173 +28,189 @@ class PairStats extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Main price hero ──
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.secondary.withValues(alpha: 0.5),
-                  AppColors.secondary.withValues(alpha: 0.2),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-              border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                CryptoIcon(symbol: symbol, size: 40),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            baseAsset,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.secondary.withValues(alpha: 0.5),
+              AppColors.secondary.withValues(alpha: 0.15),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          children: [
+            // ── Hero price section ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                children: [
+                  CryptoIcon(symbol: symbol, size: 40),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              baseAsset,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.foreground,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Flexible(
+                              child: Text(
+                                cryptoName(symbol),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.mutedForeground,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '\$${formatPrice(lastPrice)}',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 28,
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'monospace',
                               color: AppColors.foreground,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              cryptoName(symbol),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.mutedForeground,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '\$${formatPrice(lastPrice)}',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                            color: AppColors.foreground,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        (isUp
-                                ? const Color(0xFF4ADE80)
-                                : const Color(0xFFF87171))
-                            .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
                       color:
                           (isUp
                                   ? const Color(0xFF4ADE80)
                                   : const Color(0xFFF87171))
-                              .withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isUp
-                            ? LucideIcons.trendingUp
-                            : LucideIcons.trendingDown,
-                        size: 14,
-                        color: isUp
-                            ? const Color(0xFF4ADE80)
-                            : const Color(0xFFF87171),
+                              .withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color:
+                            (isUp
+                                    ? const Color(0xFF4ADE80)
+                                    : const Color(0xFFF87171))
+                                .withValues(alpha: 0.3),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${isUp ? '+' : ''}${priceChangePercent.toStringAsFixed(2)}%',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'monospace',
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isUp
+                              ? LucideIcons.trendingUp
+                              : LucideIcons.trendingDown,
+                          size: 14,
                           color: isUp
                               ? const Color(0xFF4ADE80)
                               : const Color(0xFFF87171),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Text(
+                          '${isUp ? '+' : ''}${priceChangePercent.toStringAsFixed(2)}%',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'monospace',
+                            color: isUp
+                                ? const Color(0xFF4ADE80)
+                                : const Color(0xFFF87171),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
 
-          const SizedBox(height: 10),
-
-          // ── 24h stats row: scrollable chips ──
-          SizedBox(
-            height: 56,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              children: [
-                _StatChip(
-                  icon: LucideIcons.arrowUp,
-                  iconColor: const Color(0xFF4ADE80),
-                  label: tr('pairStats.high24h'),
-                  value: '\$${formatPrice(highPrice)}',
-                ),
-                const SizedBox(width: 8),
-                _StatChip(
-                  icon: LucideIcons.arrowDown,
-                  iconColor: const Color(0xFFF87171),
-                  label: tr('pairStats.low24h'),
-                  value: '\$${formatPrice(lowPrice)}',
-                ),
-                const SizedBox(width: 8),
-                _StatChip(
-                  icon: LucideIcons.barChart3,
-                  iconColor: AppColors.accent,
-                  label: tr('pairStats.volume'),
-                  value: '${formatVolume(volume)} $baseAsset',
-                ),
-                // Trailing space so last chip doesn't hug the edge
-                const SizedBox(width: 4),
-              ],
+            // ── Divider ──
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              color: AppColors.border.withValues(alpha: 0.3),
             ),
-          ),
-        ],
+
+            // ── 24h stats grid ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _StatCell(
+                        icon: LucideIcons.arrowUp,
+                        iconColor: const Color(0xFF4ADE80),
+                        label: tr('pairStats.high24h'),
+                        value: '\$${formatPrice(highPrice)}',
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      color: AppColors.border.withValues(alpha: 0.3),
+                    ),
+                    Expanded(
+                      child: _StatCell(
+                        icon: LucideIcons.arrowDown,
+                        iconColor: const Color(0xFFF87171),
+                        label: tr('pairStats.low24h'),
+                        value: '\$${formatPrice(lowPrice)}',
+                      ),
+                    ),
+                    Container(
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      color: AppColors.border.withValues(alpha: 0.3),
+                    ),
+                    Expanded(
+                      child: _StatCell(
+                        icon: LucideIcons.barChart3,
+                        iconColor: AppColors.accent,
+                        label: tr('pairStats.volume'),
+                        value: '${formatVolume(volume)}',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StatChip extends StatelessWidget {
+/// A single stat cell inside the 3-column stats row.
+class _StatCell extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
   final String label;
   final String value;
 
-  const _StatChip({
+  const _StatCell({
     required this.icon,
     required this.iconColor,
     required this.label,
@@ -203,42 +219,42 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.secondary.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 14, color: iconColor),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                label.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 8,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                  color: AppColors.mutedForeground,
-                ),
-              ),
-              const SizedBox(height: 1),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'monospace',
-                  color: AppColors.foreground,
+              Icon(icon, size: 11, color: iconColor),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: AppColors.mutedForeground,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'monospace',
+                color: AppColors.foreground,
+              ),
+            ),
           ),
         ],
       ),
@@ -301,93 +317,88 @@ class _PairStatsSkeletonState extends State<PairStatsSkeleton>
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Main hero skeleton ──
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.secondary.withValues(alpha: 0.5),
-                  AppColors.secondary.withValues(alpha: 0.2),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-              border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Icon placeholder (circle)
-                _bone(width: 40, height: 40, radius: 20),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Name line
-                      _bone(width: 100, height: 14, radius: 6),
-                      const SizedBox(height: 8),
-                      // Price line
-                      _bone(width: 160, height: 24, radius: 6),
-                    ],
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.secondary.withValues(alpha: 0.5),
+              AppColors.secondary.withValues(alpha: 0.15),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        ),
+        child: Column(
+          children: [
+            // ── Hero skeleton ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Row(
+                children: [
+                  _bone(width: 40, height: 40, radius: 20),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _bone(width: 100, height: 14, radius: 6),
+                        const SizedBox(height: 8),
+                        _bone(width: 160, height: 24, radius: 6),
+                      ],
+                    ),
                   ),
+                  _bone(width: 72, height: 28, radius: 8),
+                ],
+              ),
+            ),
+
+            // ── Divider ──
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              color: AppColors.border.withValues(alpha: 0.3),
+            ),
+
+            // ── Stats skeleton ──
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Expanded(child: _statCellBone()),
+                    Container(
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      color: AppColors.border.withValues(alpha: 0.3),
+                    ),
+                    Expanded(child: _statCellBone()),
+                    Container(
+                      width: 1,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      color: AppColors.border.withValues(alpha: 0.3),
+                    ),
+                    Expanded(child: _statCellBone()),
+                  ],
                 ),
-                // Percent badge placeholder
-                _bone(width: 72, height: 28, radius: 8),
-              ],
+              ),
             ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // ── Stat chips skeleton ──
-          SizedBox(
-            height: 56,
-            child: Row(
-              children: [
-                Expanded(child: _chipBone()),
-                const SizedBox(width: 8),
-                Expanded(child: _chipBone()),
-                const SizedBox(width: 8),
-                Expanded(child: _chipBone()),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _chipBone() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.secondary.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
-      ),
-      child: Row(
+  Widget _statCellBone() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _bone(width: 14, height: 14, radius: 7),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _bone(width: 40, height: 8, radius: 4),
-                const SizedBox(height: 4),
-                _bone(width: 60, height: 12, radius: 4),
-              ],
-            ),
-          ),
+          _bone(width: 50, height: 9, radius: 4),
+          const SizedBox(height: 6),
+          _bone(width: 70, height: 14, radius: 4),
         ],
       ),
     );

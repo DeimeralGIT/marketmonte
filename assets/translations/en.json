@@ -45,6 +45,7 @@
         "summaryTemplate": "Hybrid Engine (Student-t HMM + PF + State-Space MC, {horizon} horizon, {paths} paths): {symbol} detected in {regime} regime ({confidence}% confidence, stability {stability}/100, entropy {entropy}%). Outlook is {trend} with regime-adjusted annualised vol {annVol}%. Median price ${median} (P25: ${p25}, P75: ${p75}). Skew {skew}, kurt {kurt}.",
         "strategyConservative": "{regime} {direction} (conservative): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%. Stability {stability}/100.",
         "strategyAggressive": "{regime} {direction} (aggressive): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "strategyLudomania": "🔥 {regime} {direction} (ludomania): {discount}% {side} market. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. High risk/reward YOLO play.",
         "regimeLowVolShort": "Low-Vol",
         "regimeTrendingShort": "Trending",
         "regimeHighVolShort": "High-Vol",
@@ -76,7 +77,8 @@
         "quantityLabel": "{quantity} {asset}",
         "forUsdt": "For ${amount} USDT",
         "strategyOutlook": "STRATEGY OUTLOOK",
-        "tradeOn": "Trade on {exchange}"
+        "tradeOn": "Trade on {exchange}",
+        "ludomania": "LUDOMANIA"
     },
     "reminder": {
         "setExitReminder": "Set Exit Reminder?",
@@ -119,6 +121,8 @@
         "language": "Language",
         "darkMode": "Dark Mode",
         "lightMode": "Light Mode",
+        "ludomania": "Ludomania Mode",
+        "ludomaniaDescription": "Adds a high risk/reward YOLO position",
         "versionFooter": "Market Monte v1.0.0 by Deimeral"
     },
     "errors": {

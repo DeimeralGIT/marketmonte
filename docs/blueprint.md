@@ -12,10 +12,11 @@
 - **Investment Sizing:** Users input a USDT investment amount; position size (quantity) and expected value are scaled to the investment.
 - **Regime Detection Display:** Visual regime card showing detected volatility regime (Low / Medium / High), probability bars, stability score, and annualized volatility.
 - **Market Leaderboard:** Global scan mode that evaluates top USDT pairs by volume and surfaces the highest-alpha opportunities.
-- **Pair Statistics Banner:** Hero price display with 24h change badge plus scrollable stat chips (24h High, 24h Low, Volume).
+- **Pair Statistics Banner:** Unified card with a hero price display (crypto icon, name, large monospace price, 24h change badge) above a 3-column stat grid (24h High, 24h Low, Volume) separated by a subtle divider — no horizontal scrolling.
 - **Exit Reminder / Calendar Integration:** After tapping the trade button, a bottom sheet offers to create a Google Calendar event with the exit target, close-by time, and ROI target pre-filled.
 - **Deep Link to Exchange:** One-tap launch to the selected exchange's trading page (or app if installed) for the selected pair. Supports Binance, Coinbase, and MEXC.
-- **Settings Drawer:** Slides in from the right via a hamburger menu button in the app bar. Contains a dark/light theme toggle (persisted via `shared_preferences`), an exchange selector (Binance / Coinbase / MEXC, persisted via `shared_preferences`), and a 6-language selector (persisted via `easy_localization`).
+- **Settings Drawer:** Slides in from the right via a hamburger menu button in the app bar. Contains a dark/light theme toggle (persisted via `shared_preferences`), a ludomania mode toggle (persisted via `shared_preferences`), an exchange selector (Binance / Coinbase / MEXC, persisted via `shared_preferences`), and a 6-language selector (persisted via `easy_localization`).
+- **Ludomania Mode:** Optional setting that, when enabled, appends an extra high risk/reward "YOLO" position to the analysis results. The ludomania position uses more aggressive parameters (1.8× the aggressive base discount, P90/P10 exit targets, 2.5× SL multiplier, full Kelly sizing up to 10%). It is visually highlighted with an orange border, gradient, and a flame-icon “LUDOMANIA” badge. Persisted via `shared_preferences` through `LudomaniaNotifier`.
 
 ## Internationalization (i18n):
 
@@ -42,7 +43,7 @@
 - Use minimalist, outline-style icons (Lucide icon set) with clear visual metaphors related to financial charts, data, and trading actions. Icons should maintain a consistent line weight and be subtle, complementing the data-centric UI without adding visual clutter.
 - Employ a modular and data-dense layout. Key information, such as selected pairs, real-time metrics, and predicted positions, should be organized into clearly delineated cards or sections. The design prioritizes responsiveness, ensuring a seamless experience across various screen sizes while maintaining information hierarchy. Critical actionable insights are highlighted for easy recognition.
 - Position cards use a responsive 2-column grid for price boxes (Entry/Exit, StopLoss/EV, SL Prob/TP Prob) with `FittedBox` auto-scaling and `Wrap`-based header badges for mobile-friendly display.
-- Pair stats use a hero price banner (full width) with a colored 24h change badge, plus horizontally scrollable stat chips below.
+- Pair stats use a unified card: hero price banner on top with crypto icon, name, large monospace price, and a colored 24h change badge, separated by a subtle divider from a 3-column stat grid (24h High, 24h Low, Volume) with vertical dividers — no horizontal scrolling.
 - Implement subtle, fluid animations for data updates and state changes, such as loading new data or re-ranking positions. These micro-interactions provide visual feedback to the user, enhancing the perception of responsiveness and adding a layer of polish without distracting from the core information.
 
 ## File Structure:
@@ -58,6 +59,7 @@ lib/
     market_providers.dart            # Riverpod providers, state notifier
     theme_provider.dart              # ThemeNotifier + themeProvider (dark/light, persisted)
     exchange_provider.dart           # ExchangeNotifier + exchangeProvider (persisted)
+    ludomania_provider.dart          # LudomaniaNotifier + ludomaniaProvider (on/off, persisted)
   screens/
     home_screen.dart                 # Main screen with tab-like controls
   services/
@@ -81,9 +83,9 @@ lib/
     empty_state.dart                 # Empty/ready state placeholder
     footer.dart                      # Disclaimer footer
     leaderboard_section.dart         # Global scan results
-    pair_stats.dart                  # Hero price + stat chips + crypto icon/name
+    pair_stats.dart                  # Hero price + 3-column stat grid + crypto icon/name
     position_card.dart               # Trade position card with exchange deeplink + reminder dialog
-    settings_drawer.dart             # Right-slide settings panel (theme toggle, exchange selector, language picker)
+    settings_drawer.dart             # Right-slide settings panel (theme toggle, ludomania toggle, exchange selector, language picker)
     crypto_icon.dart                 # CryptoIcon widget (CoinCap CDN with letter fallback)
 assets/
   icon/

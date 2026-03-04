@@ -45,6 +45,7 @@
         "summaryTemplate": "Motor híbrido (Student-t HMM + PF + State-Space MC, horizonte {horizon}, {paths} trayectorias): {symbol} detectado en régimen {regime} ({confidence}% confianza, estabilidad {stability}/100, entropía {entropy}%). Perspectiva {trend} con vol anualizada ajustada por régimen {annVol}%. Precio mediano ${median} (P25: ${p25}, P75: ${p75}). Asimetría {skew}, curtosis {kurt}.",
         "strategyConservative": "{regime} {direction} (conservadora): {orderType} {discount}% {side} del mercado. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Estabilidad {stability}/100.",
         "strategyAggressive": "{regime} {direction} (agresiva): {orderType} {discount}% {side} del mercado. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "strategyLudomania": "🔥 {regime} {direction} (ludomanía): {discount}% {side} del mercado. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Jugada YOLO de alto riesgo.",
         "regimeLowVolShort": "Vol Baja",
         "regimeTrendingShort": "Tendencia",
         "regimeHighVolShort": "Vol Alta",
@@ -76,7 +77,8 @@
         "quantityLabel": "{quantity} {asset}",
         "forUsdt": "Por ${amount} USDT",
         "strategyOutlook": "ESTRATEGIA",
-        "tradeOn": "Operar en {exchange}"
+        "tradeOn": "Operar en {exchange}",
+        "ludomania": "LUDOMANÍA"
     },
     "reminder": {
         "setExitReminder": "¿Establecer recordatorio?",
@@ -119,6 +121,8 @@
         "language": "Idioma",
         "darkMode": "Modo oscuro",
         "lightMode": "Modo claro",
+        "ludomania": "Modo Ludomanía",
+        "ludomaniaDescription": "Añade una posición YOLO de alto riesgo",
         "versionFooter": "Market Monte v1.0.0 por Deimeral"
     },
     "errors": {

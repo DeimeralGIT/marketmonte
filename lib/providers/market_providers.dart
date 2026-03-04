@@ -149,8 +149,30 @@ class MarketStateNotifier extends StateNotifier<MarketState> {
     state = state.copyWith(timePeriod: period);
   }
 
+  /// React to ludomania toggle — add or remove the YOLO position.
+  Future<void> applyLudomaniaMode(bool enabled) async {
+    final analysis = state.analysis;
+    if (analysis == null) return; // nothing to modify
+
+    if (!enabled) {
+      // Remove ludomania positions immediately
+      final filtered = analysis.positions.where((p) => !p.isLudomania).toList();
+      state = state.copyWith(
+        analysis: CryptoAnalysisResult(
+          positions: filtered,
+          analysisSummary: analysis.analysisSummary,
+          regimeInfo: analysis.regimeInfo,
+          distributionStats: analysis.distributionStats,
+        ),
+      );
+    } else {
+      // Re-run analysis with ludomania enabled
+      await analyzePair(ludomaniaMode: true);
+    }
+  }
+
   /// Analyze the currently selected pair.
-  Future<void> analyzePair() async {
+  Future<void> analyzePair({bool ludomaniaMode = false}) async {
     state = state.copyWith(
       loading: true,
       clearError: true,
@@ -163,6 +185,7 @@ class MarketStateNotifier extends StateNotifier<MarketState> {
         _analysisService.analyzePair(
           state.selectedPair,
           period: state.timePeriod,
+          ludomaniaMode: ludomaniaMode,
         ),
         _exchangeService.fetch24hTicker(state.selectedPair),
       ]);
