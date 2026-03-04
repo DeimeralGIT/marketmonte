@@ -26,6 +26,7 @@ class PositionCard extends ConsumerWidget {
   final String symbol;
   final double investmentAmount;
   final TimePeriod timePeriod;
+  final bool isLudomania;
 
   const PositionCard({
     super.key,
@@ -44,12 +45,15 @@ class PositionCard extends ConsumerWidget {
     required this.symbol,
     required this.investmentAmount,
     required this.timePeriod,
+    this.isLudomania = false,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isPositive = predictedROI > 0;
     final isLong = direction == TradeDirection.long;
+    // Ludomania orange accent
+    const ludomaniaOrange = Color(0xFFFFA726);
     // Scale EV from per-unit to per-investment
     final scaledEV = entryPrice > 0
         ? expectedValue * (investmentAmount / entryPrice)
@@ -69,377 +73,433 @@ class PositionCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: AppTheme.cardGradient,
+        gradient: isLudomania ? null : AppTheme.cardGradient,
+        color: isLudomania ? null : null,
         borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: isLudomania
+              ? ludomaniaOrange.withValues(alpha: 0.6)
+              : AppColors.border.withValues(alpha: 0.4),
+          width: isLudomania ? 2 : 1,
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        crossAxisAlignment: WrapCrossAlignment.center,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: isLudomania
+                ? LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      ludomaniaOrange.withValues(alpha: 0.08),
+                      AppColors.card.withValues(alpha: 0.95),
+                    ],
+                  )
+                : AppTheme.cardGradient,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Direction badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              color:
-                                  (isLong
-                                          ? const Color(0xFF4ADE80)
-                                          : const Color(0xFFF87171))
-                                      .withValues(alpha: 0.12),
-                              border: Border.all(
-                                color:
-                                    (isLong
-                                            ? const Color(0xFF4ADE80)
-                                            : const Color(0xFFF87171))
-                                        .withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Text(
-                              isLong
-                                  ? tr('position.long')
-                                  : tr('position.short'),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: isLong
-                                    ? const Color(0xFF4ADE80)
-                                    : const Color(0xFFF87171),
-                              ),
-                            ),
-                          ),
-                          // Rank badge
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: AppColors.accent.withValues(alpha: 0.3),
-                              ),
-                              color: AppColors.accent.withValues(alpha: 0.05),
-                            ),
-                            child: Text(
-                              tr(
-                                'position.rank',
-                                namedArgs: {'rank': rank.toString()},
-                              ),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.accent,
-                              ),
-                            ),
-                          ),
-                          // Confidence
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              Icon(
-                                LucideIcons.shieldCheck,
-                                size: 12,
-                                color: AppColors.accent,
+                              // Direction badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  color:
+                                      (isLong
+                                              ? const Color(0xFF4ADE80)
+                                              : const Color(0xFFF87171))
+                                          .withValues(alpha: 0.12),
+                                  border: Border.all(
+                                    color:
+                                        (isLong
+                                                ? const Color(0xFF4ADE80)
+                                                : const Color(0xFFF87171))
+                                            .withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  isLong
+                                      ? tr('position.long')
+                                      : tr('position.short'),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: isLong
+                                        ? const Color(0xFF4ADE80)
+                                        : const Color(0xFFF87171),
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 3),
-                              Text(
-                                '$confidenceScore%',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.mutedForeground,
+                              // Rank badge (or Ludomania badge)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: isLudomania
+                                        ? ludomaniaOrange.withValues(alpha: 0.5)
+                                        : AppColors.accent.withValues(
+                                            alpha: 0.3,
+                                          ),
+                                  ),
+                                  color: isLudomania
+                                      ? ludomaniaOrange.withValues(alpha: 0.12)
+                                      : AppColors.accent.withValues(
+                                          alpha: 0.05,
+                                        ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (isLudomania) ...[
+                                      Icon(
+                                        LucideIcons.flame,
+                                        size: 10,
+                                        color: ludomaniaOrange,
+                                      ),
+                                      const SizedBox(width: 3),
+                                    ],
+                                    Text(
+                                      isLudomania
+                                          ? tr('position.ludomania')
+                                          : tr(
+                                              'position.rank',
+                                              namedArgs: {
+                                                'rank': rank.toString(),
+                                              },
+                                            ),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: isLudomania
+                                            ? ludomaniaOrange
+                                            : AppColors.accent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Confidence
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    LucideIcons.shieldCheck,
+                                    size: 12,
+                                    color: AppColors.accent,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '$confidenceScore%',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.mutedForeground,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.centerLeft,
+                                  child: Row(
+                                    children: [
+                                      Text(
+                                        tr('position.roiTarget'),
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.foreground,
+                                        ),
+                                      ),
+                                      Text(
+                                        formatROI(predictedROI),
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: isPositive
+                                              ? const Color(0xFF4ADE80)
+                                              : const Color(0xFFF87171),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Flexible(
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerLeft,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    tr('position.roiTarget'),
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.foreground,
-                                    ),
-                                  ),
-                                  Text(
-                                    formatROI(predictedROI),
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: isPositive
-                                          ? const Color(0xFF4ADE80)
-                                          : const Color(0xFFF87171),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  children: [
-                    CryptoIcon(symbol: symbol, size: 36),
-                    const SizedBox(height: 4),
-                    Text(
-                      baseAsset,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.foreground,
-                      ),
                     ),
-                    Text(
-                      cryptoName(symbol),
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: AppColors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // Body
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                // Entry / Exit row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _PriceBox(
-                        label: tr('position.entryPrice'),
-                        value: '\$${formatPrice(entryPrice)}',
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _PriceBox(
-                        label: tr('position.exitTarget'),
-                        value: '\$${formatPrice(exitPrice)}',
-                        valueColor: AppColors.accent,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // Stop Loss / Expected Value row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _PriceBox(
-                        label: tr('position.stopLoss'),
-                        value: '\$${formatPrice(stopLoss)}',
-                        valueColor: const Color(0xFFF87171),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _PriceBox(
-                        label: tr('position.expectedValue'),
-                        value: '\$${scaledEV.toStringAsFixed(2)}',
-                        valueColor: scaledEV > 0
-                            ? const Color(0xFF4ADE80)
-                            : const Color(0xFFF87171),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-
-                // SL Prob / TP Prob row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _PriceBox(
-                        label: tr('position.slProbability'),
-                        value: '${(slProbability * 100).toStringAsFixed(1)}%',
-                        valueColor: const Color(0xFFF87171),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _PriceBox(
-                        label: tr('position.tpProbability'),
-                        value: '${(tpProbability * 100).toStringAsFixed(1)}%',
-                        valueColor: const Color(0xFF4ADE80),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Size calculation
-                if (investmentAmount > 0) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.borderRadius,
-                      ),
-                      border: Border.all(
-                        color: AppColors.accent.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    const SizedBox(width: 10),
+                    Column(
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              LucideIcons.calculator,
-                              size: 12,
-                              color: AppColors.accent,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              tr('position.size'),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.accent,
-                              ),
-                            ),
-                          ],
+                        CryptoIcon(symbol: symbol, size: 36),
+                        const SizedBox(height: 4),
+                        Text(
+                          baseAsset,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.foreground,
+                          ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              tr(
-                                'position.quantityLabel',
-                                namedArgs: {
-                                  'quantity': quantity.toStringAsFixed(6),
-                                  'asset': baseAsset,
-                                },
-                              ),
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'monospace',
-                                color: AppColors.foreground,
-                              ),
-                            ),
-                            Text(
-                              tr(
-                                'position.forUsdt',
-                                namedArgs: {
-                                  'amount': investmentAmount.toStringAsFixed(0),
-                                },
-                              ),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: AppColors.mutedForeground,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          cryptoName(symbol),
+                          style: TextStyle(
+                            fontSize: 8,
+                            color: AppColors.mutedForeground,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
 
-                // Strategy
-                const SizedBox(height: 12),
-                Row(
+              // Body
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
                   children: [
-                    Icon(
-                      LucideIcons.target,
-                      size: 12,
-                      color: AppColors.mutedForeground,
+                    // Entry / Exit row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.entryPrice'),
+                            value: '\$${formatPrice(entryPrice)}',
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.exitTarget'),
+                            value: '\$${formatPrice(exitPrice)}',
+                            valueColor: AppColors.accent,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
+
+                    const SizedBox(height: 8),
+
+                    // Stop Loss / Expected Value row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.stopLoss'),
+                            value: '\$${formatPrice(stopLoss)}',
+                            valueColor: const Color(0xFFF87171),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.expectedValue'),
+                            value: '\$${scaledEV.toStringAsFixed(2)}',
+                            valueColor: scaledEV > 0
+                                ? const Color(0xFF4ADE80)
+                                : const Color(0xFFF87171),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // SL Prob / TP Prob row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.slProbability'),
+                            value:
+                                '${(slProbability * 100).toStringAsFixed(1)}%',
+                            valueColor: const Color(0xFFF87171),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.tpProbability'),
+                            value:
+                                '${(tpProbability * 100).toStringAsFixed(1)}%',
+                            valueColor: const Color(0xFF4ADE80),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    // Size calculation
+                    if (investmentAmount > 0) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent.withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.borderRadius,
+                          ),
+                          border: Border.all(
+                            color: AppColors.accent.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.calculator,
+                                  size: 12,
+                                  color: AppColors.accent,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  tr('position.size'),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.accent,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  tr(
+                                    'position.quantityLabel',
+                                    namedArgs: {
+                                      'quantity': quantity.toStringAsFixed(6),
+                                      'asset': baseAsset,
+                                    },
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'monospace',
+                                    color: AppColors.foreground,
+                                  ),
+                                ),
+                                Text(
+                                  tr(
+                                    'position.forUsdt',
+                                    namedArgs: {
+                                      'amount': investmentAmount
+                                          .toStringAsFixed(0),
+                                    },
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: AppColors.mutedForeground,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Strategy
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.target,
+                          size: 12,
+                          color: AppColors.mutedForeground,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          tr('position.strategyOutlook'),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.mutedForeground,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                     Text(
-                      tr('position.strategyOutlook'),
+                      '"$strategyDescription"',
                       style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.mutedForeground,
-                        letterSpacing: 0.5,
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: AppColors.foreground.withValues(alpha: 0.8),
+                        height: 1.5,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  '"$strategyDescription"',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic,
-                    color: AppColors.foreground.withValues(alpha: 0.8),
-                    height: 1.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // Footer
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => _onTradePressed(context, tradeUrl),
-                icon: const Icon(LucideIcons.externalLink, size: 16),
-                label: Text(
-                  tr('position.tradeOn', namedArgs: {'exchange': exchangeName}),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.foreground,
-                  backgroundColor: AppColors.secondary,
-                  side: BorderSide(
-                    color: AppColors.border.withValues(alpha: 0.5),
+              // Footer
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _onTradePressed(context, tradeUrl),
+                    icon: const Icon(LucideIcons.externalLink, size: 16),
+                    label: Text(
+                      tr(
+                        'position.tradeOn',
+                        namedArgs: {'exchange': exchangeName},
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.foreground,
+                      backgroundColor: AppColors.secondary,
+                      side: BorderSide(
+                        color: AppColors.border.withValues(alpha: 0.5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

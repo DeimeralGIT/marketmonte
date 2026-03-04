@@ -6,6 +6,7 @@ import '../theme/app_theme.dart';
 import '../models/binance_models.dart';
 import '../models/analysis_models.dart';
 import '../providers/market_providers.dart';
+import '../providers/ludomania_provider.dart';
 
 class ControlsCard extends ConsumerStatefulWidget {
   const ControlsCard({super.key});
@@ -363,7 +364,11 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
     return SizedBox(
       height: 48,
       child: ElevatedButton.icon(
-        onPressed: isLoading ? null : () => notifier.analyzePair(),
+        onPressed: isLoading
+            ? null
+            : () => notifier.analyzePair(
+                ludomaniaMode: ref.read(ludomaniaProvider),
+              ),
         icon: isLoading
             ? SizedBox(
                 width: 16,

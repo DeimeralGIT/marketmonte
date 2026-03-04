@@ -49,8 +49,9 @@ class AnalysisService {
   CryptoAnalysisResult _runHybridEngine(
     String symbol,
     List<KlineData> klines,
-    TimePeriod period,
-  ) {
+    TimePeriod period, {
+    bool ludomaniaMode = false,
+  }) {
     final prices = klines.map((k) => k.close).toList();
     final currentPrice = prices.last;
     final n = prices.length;
@@ -189,6 +190,23 @@ class AnalysisService {
 
     // Sort by EV descending (best expected value first)
     positions.sort((a, b) => b.expectedValue.compareTo(a.expectedValue));
+
+    // ── 9b. Build ludomania position (high risk/reward) ──
+    if (ludomaniaMode && pathResults.isNotEmpty) {
+      final ludoPosition = _buildLudomaniaPosition(
+        currentPrice: currentPrice,
+        currentRegime: currentRegime,
+        regimeProbs: regimeProbs,
+        pathResults: pathResults,
+        distStats: distStats,
+        period: period,
+        stabilityScore: stabilityScore,
+        regimeEntropy: regimeEntropy,
+      );
+      if (ludoPosition != null) {
+        positions.add(ludoPosition);
+      }
+    }
 
     // ── 10. Build summary ──
     final trendLabel = (p50 > currentPrice)
@@ -560,6 +578,129 @@ class AnalysisService {
   static double _round4(double v) => double.parse(v.toStringAsFixed(4));
 
   // ───────────────────────────────────────────────────────────────────────────
+  // Ludomania position — high risk / high reward YOLO trade
+  // ───────────────────────────────────────────────────────────────────────────
+
+  /// Ludomania SL multiplier (wider stop loss than normal).
+  static const double _ludoSlMultiplier = 2.5;
+
+  TradingPosition? _buildLudomaniaPosition({
+    required double currentPrice,
+    required int currentRegime,
+    required List<double> regimeProbs,
+    required List<PathResult> pathResults,
+    required DistributionStats distStats,
+    required TimePeriod period,
+    required int stabilityScore,
+    required double regimeEntropy,
+  }) {
+    final isBullish = distStats.p50 >= currentPrice;
+    final isLong = isBullish;
+    final direction = isLong ? TradeDirection.long : TradeDirection.short;
+    final periodScale = sqrt(period.hours / 24.0).clamp(0.25, 3.0);
+    final regimeName = _regimeNames[currentRegime];
+
+    // ── Ludomania base discounts (1.8× the aggressive base) ──
+    late final double ludoBase;
+    switch (currentRegime) {
+      case 0:
+        ludoBase = 0.004 * 1.8;
+      case 1:
+        ludoBase = 0.007 * 1.8;
+      case 2:
+        ludoBase = 0.012 * 1.8;
+      default:
+        ludoBase = 0.007 * 1.8;
+    }
+
+    // ── Entry: close to current price (small discount for faster fill) ──
+    final entryDiscount = (ludoBase * 0.3 * periodScale).clamp(0.0003, 0.015);
+    final entry = isLong
+        ? currentPrice * (1 - entryDiscount)
+        : currentPrice * (1 + entryDiscount);
+
+    // ── Exit: use extreme percentile (P90 for long, P10 for short) ──
+    double exit;
+    if (isLong) {
+      exit = distStats.p90;
+      exit = max(exit, entry * 1.005); // floor: at least 0.5% above entry
+    } else {
+      exit = distStats.p10;
+      exit = min(exit, entry * 0.995); // floor: at least 0.5% below entry
+    }
+
+    // ── Stop loss: wider than normal ──
+    final stopLoss = isLong
+        ? entry - _ludoSlMultiplier * distStats.stdDev
+        : entry + _ludoSlMultiplier * distStats.stdDev;
+
+    // ── Barrier probabilities ──
+    final tpCount = isLong
+        ? pathResults.where((p) => p.maxPrice >= exit).length
+        : pathResults.where((p) => p.minPrice <= exit).length;
+    final slCount = isLong
+        ? pathResults.where((p) => p.minPrice <= stopLoss).length
+        : pathResults.where((p) => p.maxPrice >= stopLoss).length;
+
+    final tpProb = tpCount / _numSim;
+    final slProb = slCount / _numSim;
+
+    // ── Expected Value ──
+    final tpGain = (exit - entry).abs();
+    final slLoss = (entry - stopLoss).abs();
+    final ev = tpProb * tpGain - slProb * slLoss;
+    final cost = currentPrice * (_txCost + _slippage);
+    final evAdj = ev - cost;
+
+    // ── Kelly (full fraction for ludomania — no half-Kelly) ──
+    double kelly = 0.0;
+    if (slLoss > 0) {
+      final fStar = (tpProb * tpGain - slProb * slLoss) / slLoss;
+      kelly = (fStar).clamp(0.0, 0.10); // up to 10% position for YOLO
+    }
+
+    // ── ROI ──
+    final roi = isLong ? _roi(entry, exit) : _roi(exit, entry);
+
+    // ── Confidence ──
+    final conf = (tpProb * 100).round().clamp(5, 95);
+
+    // ── Strategy description ──
+    final dirLabel = isLong ? tr('analysis.dirLong') : tr('analysis.dirShort');
+    final discPct = ((entry - currentPrice).abs() / currentPrice * 100)
+        .toStringAsFixed(2);
+
+    final desc = tr(
+      'analysis.strategyLudomania',
+      namedArgs: {
+        'regime': regimeName,
+        'direction': dirLabel,
+        'discount': discPct,
+        'side': isLong ? tr('analysis.below') : tr('analysis.above'),
+        'tpProb': (tpProb * 100).toStringAsFixed(1),
+        'slProb': (slProb * 100).toStringAsFixed(1),
+        'ev': evAdj.toStringAsFixed(2),
+        'kelly': (kelly * 100).toStringAsFixed(1),
+      },
+    );
+
+    return TradingPosition(
+      direction: direction,
+      entryPrice: _round4(entry),
+      exitPrice: _round4(exit),
+      stopLoss: _round4(stopLoss),
+      predictedROI: roi,
+      confidenceScore: conf,
+      tpProbability: tpProb,
+      slProbability: slProb,
+      expectedValue: evAdj,
+      positionSizePct: kelly * 100,
+      strategyDescription: desc,
+      isLudomania: true,
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
   // Public API
   // ───────────────────────────────────────────────────────────────────────────
 
@@ -567,6 +708,7 @@ class AnalysisService {
   Future<CryptoAnalysisResult> analyzePair(
     String symbol, {
     TimePeriod period = TimePeriod.oneDay,
+    bool ludomaniaMode = false,
   }) async {
     final limit = period.hours <= 24
         ? 168
@@ -580,7 +722,12 @@ class AnalysisService {
         tr('errors.noHistoricalData', namedArgs: {'symbol': symbol}),
       );
     }
-    return _runHybridEngine(symbol, klines, period);
+    return _runHybridEngine(
+      symbol,
+      klines,
+      period,
+      ludomaniaMode: ludomaniaMode,
+    );
   }
 
   /// Scan top market leaders and return the best opportunities.

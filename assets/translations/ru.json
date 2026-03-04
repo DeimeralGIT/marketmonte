@@ -45,6 +45,7 @@
         "summaryTemplate": "Гибридный движок (Student-t HMM + PF + State-Space MC, горизонт {horizon}, {paths} путей): {symbol} обнаружен в режиме {regime} ({confidence}% уверенность, стабильность {stability}/100, энтропия {entropy}%). Прогноз {trend} с режим-скорректированной годовой волатильностью {annVol}%. Медианная цена ${median} (P25: ${p25}, P75: ${p75}). Асимметрия {skew}, эксцесс {kurt}.",
         "strategyConservative": "{regime} {direction} (консервативная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%. Стабильность {stability}/100.",
         "strategyAggressive": "{regime} {direction} (агрессивная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
+        "strategyLudomania": "🔥 {regime} {direction} (лудомания): {discount}% {side} рынка. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Высокий риск/доход.",
         "regimeLowVolShort": "Низ-Вол",
         "regimeTrendingShort": "Тренд",
         "regimeHighVolShort": "Выс-Вол",
@@ -76,7 +77,8 @@
         "quantityLabel": "{quantity} {asset}",
         "forUsdt": "На ${amount} USDT",
         "strategyOutlook": "СТРАТЕГИЯ",
-        "tradeOn": "Торговать на {exchange}"
+        "tradeOn": "Торговать на {exchange}",
+        "ludomania": "ЛУДОМАНИЯ"
     },
     "reminder": {
         "setExitReminder": "Установить напоминание?",
@@ -119,6 +121,8 @@
         "language": "Язык",
         "darkMode": "Тёмная тема",
         "lightMode": "Светлая тема",
+        "ludomania": "Режим лудомании",
+        "ludomaniaDescription": "Добавляет позицию с высоким риском/доходом",
         "versionFooter": "Market Monte v1.0.0 от Deimeral"
     },
     "errors": {
