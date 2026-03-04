@@ -21,7 +21,7 @@ class PositionCard extends ConsumerWidget {
   final double expectedValue;
   final double positionSizePct;
   final TradeDirection direction;
-  final String strategyDescription;
+  final TranslatableString strategyDescription;
   final int rank;
   final String symbol;
   final double investmentAmount;
@@ -460,7 +460,7 @@ class PositionCard extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '"$strategyDescription"',
+                      '"${strategyDescription.translate()}"',
                       style: TextStyle(
                         fontSize: 13,
                         fontStyle: FontStyle.italic,
@@ -720,7 +720,7 @@ class PositionCard extends ConsumerWidget {
           'exit': formatPrice(exitPrice),
           'roi': formatROI(predictedROI),
           'confidence': confidenceScore.toString(),
-          'strategy': strategyDescription,
+          'strategy': strategyDescription.translate(),
         },
       ),
     );

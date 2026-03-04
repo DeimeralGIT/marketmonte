@@ -56,7 +56,7 @@ class LeaderboardSection extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                leaderboard.globalOutlook,
+                leaderboard.globalOutlook.translate(),
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.mutedForeground,

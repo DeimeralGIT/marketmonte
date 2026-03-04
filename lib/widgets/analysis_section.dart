@@ -96,7 +96,7 @@ class AnalysisSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    analysis.analysisSummary,
+                    analysis.analysisSummary.translate(),
                     style: TextStyle(
                       fontSize: 14,
                       color: AppColors.mutedForeground,
