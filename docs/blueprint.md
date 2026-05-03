@@ -93,5 +93,10 @@ assets/
     en.json, ru.json, es.json, fr.json, pt.json, it.json
 docs/
   blueprint.md                       # This file
-  algorithm.md                       # Full algorithm technical reference
+  algorithm.md                       # Pipeline overview, inter-layer data flow, combined constants & models
+  hmm.md                             # Student-t HMM (Baum-Welch EM, ECME ν, Viterbi, forward filtering)
+  particle_filter.md                 # Particle filter, volScale, HMM/PF blending, regime persistence
+  monte_carlo.md                     # 10k-path regime-switching MC simulation, forecast distribution
+  trade_construction.md              # Long/short building, barrier pricing, EV, Kelly sizing, acceptance filter
+  leaderboard.md                     # Cross-asset scanning, entropy-penalized ranking, risk controls
 ```
