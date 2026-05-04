@@ -36,16 +36,18 @@
         "medLabel": "Сред.",
         "highLabel": "Выс.",
         "annVol": "Год. вол.",
-        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "volScaleLabel": "Масштаб вол.",
+        "persistenceLabel": "Устойчивость",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC + Кредитное плечо",
         "outlook": "Прогноз: {symbol}",
         "recommendedPositions": "Рекомендованные позиции",
         "analysisError": "Ошибка анализа",
         "bullish": "бычий",
         "bearish": "медвежий",
-        "summaryTemplate": "Гибридный движок (Student-t HMM + PF + State-Space MC, горизонт {horizon}, {paths} путей): {symbol} обнаружен в режиме {regime} ({confidence}% уверенность, стабильность {stability}/100, энтропия {entropy}%). Прогноз {trend} с режим-скорректированной годовой волатильностью {annVol}%. Медианная цена ${median} (P25: ${p25}, P75: ${p75}). Асимметрия {skew}, эксцесс {kurt}.",
-        "strategyConservative": "{regime} {direction} (консервативная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%. Стабильность {stability}/100.",
-        "strategyAggressive": "{regime} {direction} (агрессивная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
-        "strategyLudomania": "🔥 {regime} {direction} (лудомания): {discount}% {side} рынка. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Высокий риск/доход.",
+        "summaryTemplate": "Гибридный движок (Student-t HMM + PF + State-Space MC, горизонт {horizon}, {paths} путей): {symbol} обнаружен в режиме {regime} ({confidence}% уверенность, стабильность {stability}/100, энтропия {entropy}%). Прогноз {trend} с режим-скорректированной годовой волатильностью {annVol}%. Масштаб вол.: {volScale}. Медианная цена ${median} (P25: ${p25}, P75: ${p75}). Асимметрия {skew}, эксцесс {kurt}.",
+        "strategyConservative": "{regime} {direction} (консервативная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%. Стабильность {stability}/100. Плечо {leverage}x.",
+        "strategyAggressive": "{regime} {direction} (агрессивная): {orderType} {discount}% {side} рынка. Вероятность TP {tpProb}%, вероятность SL {slProb}%. EV ${ev}. Kelly {kelly}%. Плечо {leverage}x.",
+        "strategyLudomania": "🔥 {regime} {direction} (лудомания): {discount}% {side} рынка. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Плечо {leverage}x. Высокий риск/доход.",
         "regimeLowVolShort": "Низ-Вол",
         "regimeTrendingShort": "Тренд",
         "regimeHighVolShort": "Выс-Вол",
@@ -59,8 +61,8 @@
     "leaderboard": {
         "globalScan": "Глобальное сканирование лидеров рынка",
         "topAlpha": "Лучшие альфа-возможности",
-        "reasoningTemplate": "Режим-адаптивный выбор: обнаружен режим {regime} (стабильность {stability}/100, энтропия {entropy}%). Позиция {direction}. Student-t HMM + PF, {paths} путей за {horizon}. EV: ${ev}.",
-        "globalOutlookTemplate": "Гибридное режим-осведомлённое сканирование (горизонт {horizon}): Student-t HMM + PF + State-Space MC по {pairsCount} высокообъёмным парам. Распределение режимов: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Лидеры ранжированы по энтропия-штрафованному ожидаемому значению."
+        "reasoningTemplate": "Режим-адаптивный выбор: обнаружен режим {regime} (стабильность {stability}/100, энтропия {entropy}%). Позиция {direction}. Student-t HMM + PF, {paths} путей за {horizon}. EV: ${ev}. Плечо: {leverage}x.",
+        "globalOutlookTemplate": "Гибридное режим-осведомлённое сканирование (горизонт {horizon}): Student-t HMM + PF + State-Space MC по {pairsCount} высокообъёмным парам. Распределение режимов: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Лидеры ранжированы по энтропия-штрафованному ожидаемому значению с учётом плеча."
     },
     "position": {
         "long": "ЛОНГ",
@@ -71,6 +73,8 @@
         "exitTarget": "Цель выхода",
         "stopLoss": "Стоп-лосс",
         "expectedValue": "Ожидаемая стоимость",
+        "leverage": "Кредитное плечо",
+        "positionSize": "Размер позиции",
         "slProbability": "Вероятность SL",
         "tpProbability": "Вероятность TP",
         "size": "РАЗМЕР",
@@ -110,7 +114,9 @@
     "timePeriod": {
         "1H": "1 час",
         "4H": "4 часа",
+        "12H": "12 часов",
         "1D": "1 день",
+        "2D": "2 дня",
         "1W": "1 неделя",
         "1M": "1 месяц"
     },

@@ -36,16 +36,18 @@
         "medLabel": "Med.",
         "highLabel": "Alta",
         "annVol": "Vol. anual",
-        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "volScaleLabel": "Escala Vol",
+        "persistenceLabel": "Persistencia",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC + Apalancamiento",
         "outlook": "Perspectiva: {symbol}",
         "recommendedPositions": "Posiciones recomendadas",
         "analysisError": "Error de análisis",
         "bullish": "alcista",
         "bearish": "bajista",
-        "summaryTemplate": "Motor híbrido (Student-t HMM + PF + State-Space MC, horizonte {horizon}, {paths} trayectorias): {symbol} detectado en régimen {regime} ({confidence}% confianza, estabilidad {stability}/100, entropía {entropy}%). Perspectiva {trend} con vol anualizada ajustada por régimen {annVol}%. Precio mediano ${median} (P25: ${p25}, P75: ${p75}). Asimetría {skew}, curtosis {kurt}.",
-        "strategyConservative": "{regime} {direction} (conservadora): {orderType} {discount}% {side} del mercado. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Estabilidad {stability}/100.",
-        "strategyAggressive": "{regime} {direction} (agresiva): {orderType} {discount}% {side} del mercado. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%.",
-        "strategyLudomania": "🔥 {regime} {direction} (ludomanía): {discount}% {side} del mercado. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Jugada YOLO de alto riesgo.",
+        "summaryTemplate": "Motor híbrido (Student-t HMM + PF + State-Space MC, horizonte {horizon}, {paths} trayectorias): {symbol} detectado en régimen {regime} ({confidence}% confianza, estabilidad {stability}/100, entropía {entropy}%). Perspectiva {trend} con vol anualizada ajustada por régimen {annVol}%. Escala vol: {volScale}. Precio mediano ${median} (P25: ${p25}, P75: ${p75}). Asimetría {skew}, curtosis {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservadora): {orderType} {discount}% {side} del mercado. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Estabilidad {stability}/100. Apalancamiento {leverage}x.",
+        "strategyAggressive": "{regime} {direction} (agresiva): {orderType} {discount}% {side} del mercado. Prob. TP {tpProb}%, prob. SL {slProb}%. EV ${ev}. Kelly {kelly}%. Apalancamiento {leverage}x.",
+        "strategyLudomania": "🔥 {regime} {direction} (ludomanía): {discount}% {side} del mercado. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Apalancamiento {leverage}x. Jugada YOLO de alto riesgo.",
         "regimeLowVolShort": "Vol Baja",
         "regimeTrendingShort": "Tendencia",
         "regimeHighVolShort": "Vol Alta",
@@ -59,8 +61,8 @@
     "leaderboard": {
         "globalScan": "Escaneo global de líderes del mercado",
         "topAlpha": "Mejores oportunidades alfa",
-        "reasoningTemplate": "Selección adaptativa al régimen: régimen {regime} detectado (estabilidad {stability}/100, entropía {entropy}%). Posición {direction}. Student-t HMM + PF, {paths} trayectorias en {horizon}. EV: ${ev}.",
-        "globalOutlookTemplate": "Escaneo híbrido consciente del régimen (horizonte {horizon}): Student-t HMM + PF + State-Space MC en {pairsCount} pares de alto volumen. Distribución de régimen: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Líderes clasificados por valor esperado penalizado por entropía."
+        "reasoningTemplate": "Selección adaptativa al régimen: régimen {regime} detectado (estabilidad {stability}/100, entropía {entropy}%). Posición {direction}. Student-t HMM + PF, {paths} trayectorias en {horizon}. EV: ${ev}. Apalancamiento: {leverage}x.",
+        "globalOutlookTemplate": "Escaneo híbrido consciente del régimen (horizonte {horizon}): Student-t HMM + PF + State-Space MC en {pairsCount} pares de alto volumen. Distribución de régimen: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Líderes clasificados por valor esperado penalizado por entropía con rendimientos apalancados."
     },
     "position": {
         "long": "LARGO",
@@ -71,6 +73,8 @@
         "exitTarget": "Objetivo de salida",
         "stopLoss": "Stop Loss",
         "expectedValue": "Valor esperado",
+        "leverage": "Apalancamiento",
+        "positionSize": "Tamaño de posición",
         "slProbability": "Probabilidad SL",
         "tpProbability": "Probabilidad TP",
         "size": "TAMAÑO",
@@ -110,7 +114,9 @@
     "timePeriod": {
         "1H": "1 hora",
         "4H": "4 horas",
+        "12H": "12 horas",
         "1D": "1 día",
+        "2D": "2 días",
         "1W": "1 semana",
         "1M": "1 mes"
     },

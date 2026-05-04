@@ -2,7 +2,9 @@
 enum TimePeriod {
   oneHour('1H', 1, '1 Hour'),
   fourHours('4H', 4, '4 Hours'),
+  twelveHours('12H', 12, '12 Hours'),
   oneDay('1D', 24, '1 Day'),
+  twoDays('2D', 48, '2 Days'),
   oneWeek('1W', 168, '1 Week'),
   oneMonth('1M', 720, '1 Month');
 
@@ -155,6 +157,8 @@ class TradingPosition {
   final double positionSizePct;
   final String strategyDescription;
   final bool isLudomania;
+  final int leverage;
+  final int durationHours;
 
   TradingPosition({
     required this.direction,
@@ -169,6 +173,8 @@ class TradingPosition {
     required this.positionSizePct,
     required this.strategyDescription,
     this.isLudomania = false,
+    this.leverage = 1,
+    this.durationHours = 24,
   });
 
   factory TradingPosition.fromJson(Map<String, dynamic> json) {
@@ -185,6 +191,8 @@ class TradingPosition {
       positionSizePct: (json['positionSizePct'] as num?)?.toDouble() ?? 0.0,
       strategyDescription: json['strategyDescription'] as String,
       isLudomania: json['isLudomania'] as bool? ?? false,
+      leverage: json['leverage'] as int? ?? 1,
+      durationHours: json['durationHours'] as int? ?? 24,
     );
   }
 
@@ -201,6 +209,8 @@ class TradingPosition {
     'positionSizePct': positionSizePct,
     'strategyDescription': strategyDescription,
     'isLudomania': isLudomania,
+    'leverage': leverage,
+    'durationHours': durationHours,
   };
 }
 
@@ -209,12 +219,16 @@ class CryptoAnalysisResult {
   final String analysisSummary;
   final RegimeInfo? regimeInfo;
   final DistributionStats? distributionStats;
+  final double volScale;
+  final double persistenceBoost;
 
   CryptoAnalysisResult({
     required this.positions,
     required this.analysisSummary,
     this.regimeInfo,
     this.distributionStats,
+    this.volScale = 1.0,
+    this.persistenceBoost = 0.0,
   });
 
   factory CryptoAnalysisResult.fromJson(Map<String, dynamic> json) {
@@ -248,6 +262,7 @@ class LeadPosition {
   final int confidenceScore;
   final double expectedValue;
   final String reasoning;
+  final int leverage;
 
   LeadPosition({
     required this.symbol,
@@ -259,6 +274,7 @@ class LeadPosition {
     required this.confidenceScore,
     required this.expectedValue,
     required this.reasoning,
+    this.leverage = 1,
   });
 
   factory LeadPosition.fromJson(Map<String, dynamic> json) {
@@ -272,6 +288,7 @@ class LeadPosition {
       confidenceScore: json['confidenceScore'] as int,
       expectedValue: (json['expectedValue'] as num?)?.toDouble() ?? 0.0,
       reasoning: json['reasoning'] as String,
+      leverage: json['leverage'] as int? ?? 1,
     );
   }
 
@@ -285,6 +302,7 @@ class LeadPosition {
     'confidenceScore': confidenceScore,
     'expectedValue': expectedValue,
     'reasoning': reasoning,
+    'leverage': leverage,
   };
 }
 
@@ -310,4 +328,45 @@ class MarketLeaderboardResult {
     'topPicks': topPicks.map((p) => p.toJson()).toList(),
     'globalOutlook': globalOutlook,
   };
+}
+
+/// Tunable algorithm configuration parameters.
+class AlgorithmConfig {
+  final double txCost;
+  final double slippage;
+  final double stopMultiplier;
+  final double volScaleMin;
+  final double volScaleMax;
+  final double periodScaleMin;
+  final double periodScaleMax;
+  final double regimeLowThreshold;
+  final double regimeHighThreshold;
+  final double persistenceMultiplier;
+  final double discountLow;
+  final double discountMedium;
+  final double discountHigh;
+  final double driftMultiplier;
+  final double kellyMax;
+  final double basePositionPct;
+  final int maxLeverage;
+
+  const AlgorithmConfig({
+    this.txCost = 0.001,
+    this.slippage = 0.0002,
+    this.stopMultiplier = 1.2,
+    this.volScaleMin = 0.5,
+    this.volScaleMax = 2.5,
+    this.periodScaleMin = 0.5,
+    this.periodScaleMax = 2.5,
+    this.regimeLowThreshold = 0.9,
+    this.regimeHighThreshold = 1.3,
+    this.persistenceMultiplier = 0.10,
+    this.discountLow = 0.0010,
+    this.discountMedium = 0.0020,
+    this.discountHigh = 0.0040,
+    this.driftMultiplier = 50.0,
+    this.kellyMax = 0.05,
+    this.basePositionPct = 0.001,
+    this.maxLeverage = 75,
+  });
 }

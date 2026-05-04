@@ -1,7 +1,7 @@
 # Market Monte — Algorithm Reference
 
-> **Last updated:** 2026-03-05  
-> **Purpose:** High-level description of the four-layer probabilistic pipeline and how the individual algorithms combine. Each layer has its own detailed reference document.
+> **Last updated:** 2026-03-24
+> **Purpose:** High-level description of the four-layer probabilistic pipeline as implemented in the Flutter/Dart mobile analytics app. Each layer has its own detailed reference document.
 
 ---
 
@@ -9,11 +9,11 @@
 
 1. [Architecture Overview](#1-architecture-overview)
 2. [Data Pipeline](#2-data-pipeline)
-3. [Layer 1 — Regime Detection (HMM)](#3-layer-1--regime-detection-hmm)
-4. [Layer 2 — Volatility Adaptation (Particle Filter)](#4-layer-2--volatility-adaptation-particle-filter)
+3. [Layer 1 — Regime Detection](#3-layer-1--regime-detection)
+4. [Layer 2 — Volatility Adaptation](#4-layer-2--volatility-adaptation)
 5. [Layer 3 — Monte Carlo Simulation](#5-layer-3--monte-carlo-simulation)
 6. [Layer 4 — Trade Construction & Sizing](#6-layer-4--trade-construction--sizing)
-7. [Cross-Asset Leaderboard](#7-cross-asset-leaderboard)
+7. [Market Leaders Scan](#7-market-leaders-scan)
 8. [Inter-Layer Data Flow](#8-inter-layer-data-flow)
 9. [Configuration Constants](#9-configuration-constants)
 10. [Data Models](#10-data-models)
@@ -24,17 +24,18 @@
 
 | Document | Covers |
 |----------|--------|
-| [hmm.md](hmm.md) | Student-t HMM — Baum-Welch EM, ECME ν estimation, Viterbi, forward filtering |
-| [particle_filter.md](particle_filter.md) | 500-particle filter, volScale evolution, HMM/PF probability blending, regime persistence adjustment |
-| [monte_carlo.md](monte_carlo.md) | 10,000-path regime-switching simulation, Student-t innovations, path tracking, forecast distribution |
-| [trade_construction.md](trade_construction.md) | Long/short position building, barrier pricing, expected value, Kelly sizing, acceptance filter |
-| [leaderboard.md](leaderboard.md) | Cross-asset scanning, entropy-penalized ranking, risk controls |
+| [hmm.md](hmm.md) | Student-t HMM with Baum-Welch EM — 3-state regime detection with ECME M-step |
+| [particle_filter.md](particle_filter.md) | 500-particle Sequential Monte Carlo — real-time volScale tracking and regime blending |
+| [monte_carlo.md](monte_carlo.md) | 10,000-path regime-switching Monte Carlo — Student-t innovations with barrier tracking |
+| [trade_construction.md](trade_construction.md) | Long/short position building, barrier-priced TP/SL, leverage, EV calculation, Kelly sizing |
+| [leaderboard.md](leaderboard.md) | Market leaders scan — top 10 pairs ranked by entropy-penalized EV with leveraged returns |
+| [dynamic-adjustments.md](dynamic-adjustments.md) | AlgorithmConfig tunable parameters and adaptation rules |
 
 ---
 
 ## 1. Architecture Overview
 
-The engine is a **four-layer probabilistic pipeline**:
+The engine is a **four-layer probabilistic pipeline** implemented in Dart/Flutter:
 
 ```
 Raw hourly candles (Exchange API)
@@ -42,29 +43,29 @@ Raw hourly candles (Exchange API)
         ▼
   ┌──────────────────────────────────┐
   │  Layer 1: Regime Detection       │  Student-t HMM (Baum-Welch EM)
-  │  (3 latent states, fat tails)    │  → hmm.md
+  │  (3 discrete regimes)            │  → hmm.md
   └──────────────┬───────────────────┘
-                 │ learned params {μ,σ,ν} + transition matrix A
+                 │ regime label + blended probabilities
                  ▼
   ┌──────────────────────────────────┐
-  │  Layer 2: Volatility Adaptation  │  500 particles, systematic resampling
-  │  (Particle Filter)               │  → particle_filter.md
+  │  Layer 2: Volatility Adaptation  │  500-particle Sequential Monte Carlo
+  │  (Particle filter)               │  → particle_filter.md
   └──────────────┬───────────────────┘
-                 │ blended regime probs + volScale + adjusted A'
+                 │ volScale, persistenceBoost, persistence-adjusted A'
                  ▼
   ┌──────────────────────────────────┐
-  │  Layer 3: Sticky Regime MC Sim   │  10,000 paths, Student-t innovations
-  │  (State-Space with persistence)  │  → monte_carlo.md
+  │  Layer 3: Monte Carlo Simulation │  10,000 regime-switching paths
+  │  (Student-t innovations)         │  → monte_carlo.md
   └──────────────┬───────────────────┘
-                 │ List<PathResult> (finalPrice, maxPrice, minPrice, drawdown)
+                 │ price distribution, barrier stats
                  ▼
   ┌──────────────────────────────────┐
-  │  Layer 4: EV-Optimized Trades    │  Barrier pricing, Kelly sizing
+  │  Layer 4: Trade Construction     │  Barrier pricing, leverage, EV, Kelly
   │  (Long + Short positions)        │  → trade_construction.md
   └──────────────────────────────────┘
 ```
 
-**Philosophy:** This engine does not predict price. It prices probabilistic opportunity under regime uncertainty. All trades must satisfy positive expected value under realistic execution assumptions.
+**Philosophy:** The engine prices probabilistic opportunity under regime uncertainty using full Monte Carlo simulation with Student-t heavy-tailed innovations. All positions include barrier-priced TP/SL probabilities, calculated leverage, and expected value. Both long and short positions are always produced for maximum analytical coverage.
 
 ---
 
@@ -72,11 +73,11 @@ Raw hourly candles (Exchange API)
 
 ### 2.1 Market Data
 
-- **Source:** Configurable exchange via `ExchangeService` abstraction — Binance, Coinbase, or MEXC public REST APIs (no auth required)
+- **Sources:** Binance, Coinbase, MEXC (via abstract `ExchangeService` interface)
 - **Timeframe:** 1H candles
-- **Rolling training window:** 168 hours minimum (1 week)
-- **Fields used:** Close price
-- **Assets:** Top N USDT pairs by 24h volume (configurable, default 10)
+- **Rolling window:** 168 hours (1 week)
+- **Fields used:** Close price from kline data
+- **Assets:** Top USDT pairs by 24h volume (exchange-specific)
 
 ### 2.2 Return Transformation
 
@@ -86,41 +87,38 @@ Hourly log-returns:
 r_t = ln(P_t / P_{t-1})
 ```
 
-Fed directly into the HMM — no smoothing applied.
+Fed directly into regime detection — no smoothing applied.
 
-### 2.3 Kline Limit Scaling
+### 2.3 Minimum Data Requirement
 
-```
-limit = period.hours ≤ 24 ? 168 : clamp(period.hours × 2, 168, 720)
-```
+The engine requires at least **50 log-returns** (51 candles) to produce positions. If fewer are available, it returns an empty result with a default MEDIUM regime.
 
 ---
 
-## 3. Layer 1 — Regime Detection (HMM)
+## 3. Layer 1 — Regime Detection
 
 **Full reference:** [hmm.md](hmm.md)
 
-A 3-state Student-t HMM trained via Baum-Welch EM with ECME ν estimation. Each state represents a volatility regime (Low / Medium / High) with fat-tailed emission distributions.
+A **Student-t Hidden Markov Model** (3 states) fitted via **Baum-Welch Expectation-Maximization** with an ECME M-step. Student-t emissions provide robustness to fat-tailed returns. The M-step uses auxiliary weights `ũ = (ν+1)/(ν+z²)` for weighted mean/variance estimation, plus a profile log-likelihood grid search over ν ∈ {2.5, 3, 4, 5, 7, 10, 15, 30}. States are re-sorted by σ after each iteration.
 
-**Inputs:** Hourly log-returns  
+**Inputs:** Hourly log-returns
 **Outputs consumed by downstream layers:**
-- Per-state parameters: `{μ_k, σ_k, ν_k}` for k ∈ {0, 1, 2}
-- Transition matrix `A` (3×3)
-- Forward-filtered state probabilities at the last time step
+- Regime label: `LOW` (index 0), `MEDIUM` (index 1), or `HIGH` (index 2)
+- Blended regime probabilities: **70% HMM forward-filtered + 30% Particle Filter** weighted average
 
 ---
 
-## 4. Layer 2 — Volatility Adaptation (Particle Filter)
+## 4. Layer 2 — Volatility Adaptation
 
 **Full reference:** [particle_filter.md](particle_filter.md)
 
-A 500-particle sequential filter that adapts local volatility in real time and blends its regime estimates with the HMM's batch probabilities.
+A **500-particle Sequential Monte Carlo** filter tracking real-time volatility evolution. Each particle carries a regime state and a mean-reverting volScale (`0.92v + 0.08 + 0.03·N(0,1)`, clamped [0.5, 2.5]). Weights are computed via Student-t log-likelihood. Systematic resampling triggers at ESS < N/2.
 
-**Inputs:** HMM parameters `{μ, σ, ν, A}`, last 50 log-returns  
+**Inputs:** Last 50 log-returns, HMM parameters
 **Outputs consumed by downstream layers:**
-- **Blended regime probabilities:** `0.7 × HMM + 0.3 × PF` → used to sample initial regime in MC
-- **volScale mean:** multiplicative correction applied to σ during simulation
-- **Persistence-adjusted transition matrix A':** boosted diagonal to prevent over-switching (entropy-gated, up to +0.10)
+- **volScale:** Weighted mean of particle volScales, clamped `[volScaleMin, volScaleMax]` (defaults `[0.5, 2.5]`)
+- **persistenceBoost:** `persistenceMultiplier × (1 - normalizedEntropy)` (default multiplier 0.10)
+- **A':** Persistence-adjusted transition matrix (diagonal boosted, off-diagonal renormalized)
 
 ---
 
@@ -128,12 +126,18 @@ A 500-particle sequential filter that adapts local volatility in real time and b
 
 **Full reference:** [monte_carlo.md](monte_carlo.md)
 
-10,000 paths of regime-switching GBM with Student-t innovations, full path tracking.
+**10,000 regime-switching paths** with Student-t innovations. Each step samples a regime transition from the persistence-adjusted matrix A', then generates:
 
-**Inputs:** HMM params `{μ, σ, ν}`, adjusted `A'`, `volScale`, `blended_probs`, current price, horizon steps  
+```
+logReturn = (μ - 0.5σ²) + σ × T(ν)
+```
+
+Student-t variates are generated via Marsaglia-Tsang gamma + Box-Muller. Full path tracking records `maxPrice`, `minPrice`, and `maxDrawdown` (peak-to-trough) for **barrier pricing**.
+
+**Inputs:** Current price, HMM parameters, persistence-adjusted A', simulation horizon
 **Outputs consumed by downstream layers:**
-- `List<PathResult>` sorted by `finalPrice` — each containing `finalPrice`, `maxPrice`, `minPrice`, `maxDrawdown`
-- `DistributionStats`: percentiles (P5–P95), mean, stdDev, skewness, kurtosis
+- Price distribution statistics (mean, stdDev, skewness, kurtosis, percentiles P5–P95)
+- Per-path barrier data (maxPrice, minPrice, maxDrawdown)
 
 ---
 
@@ -141,69 +145,70 @@ A 500-particle sequential filter that adapts local volatility in real time and b
 
 **Full reference:** [trade_construction.md](trade_construction.md)
 
-Builds long/short positions using conditional expectations from the simulation paths, prices barrier TP/SL probabilities against full path extremes, computes EV net of costs, and sizes via half-Kelly.
+Builds **both long (BUY) and short (SELL)** positions for each analysis. Each direction produces up to 2 positions: conservative (small entry discount) and aggressive (larger discount). Computes entries with regime-based discounts, exits via conditional expectation from MC paths (barrier pricing), stops with volatility-scaled buffers, leverage, and expected value net of transaction costs.
 
-**Inputs:** `List<PathResult>`, `DistributionStats`, current price, regime info  
+**Inputs:** MC path results, `currentPrice`, `regime`, `volScale`
 **Outputs:**
-- Ranked `List<TradingPosition>` (direction, entry, exit, SL, ROI, EV, TP/SL probs, Kelly size)
+- `List<TradingPosition>` — each containing side, entry, exit, stop, EV (leveraged), leverage, Kelly size, confidence %, expected ROI % (leveraged), duration
 
-### Combined EV Calculation
-
-The final expected value that determines trade ranking ties all four layers together:
+### Combined Pipeline
 
 ```
-1. HMM detects regime → determines base discount (entry distance)
-2. PF adapts volScale → σ_eff used in simulation
-3. MC paths → conditional exit price, barrier TP/SL probabilities
-4. EV = TP_prob × |exit − entry| − SL_prob × |entry − stop| − costs
-5. Kelly size = clamp(0.5 × EV / SL_loss, 0%, 5%)
-6. Accept if EV > 0 AND TP_prob ≥ 40%
+1. HMM → regime detection with Student-t emissions
+2. Particle filter → volScale, persistenceBoost, A'
+3. MC simulation → 10k paths with barrier tracking
+4. TP price → E[finalPrice | finalPrice ≥ entry]  (conditional expectation from MC paths)
+5. SL price → entry ∓ stopMultiplier × σ_distribution
+6. Barrier probs → path counting: tpProb = count(maxPrice ≥ exit) / 10000
+7. Leverage → (0.35 × confScale × regimeScale) / slDistancePct
+8. EV = tpProb × gain − slProb × loss − costs, then × leverage
+9. Kelly size = 0.5 × (tpProb × gain − slProb × loss) / loss, clamped [0%, kellyMax]
 ```
 
 ---
 
-## 7. Cross-Asset Leaderboard
+## 7. Market Leaders Scan
 
 **Full reference:** [leaderboard.md](leaderboard.md)
 
-Runs the full four-layer pipeline on the top 10 USDT pairs by volume and ranks them using an entropy-penalized EV score:
-
-```
-score = EV_adj × (1 − RegimeEntropy / ln(3))
-```
-
-Returns the top 3 opportunities as `LeadPosition` objects.
+The app scans the top 10 USDT pairs on the selected exchange, running the full 4-layer pipeline for each and ranking results by **entropy-penalized expected value** with leveraged returns.
 
 ---
 
 ## 8. Inter-Layer Data Flow
 
 ```
-                     ┌─────────────┐
-  log-returns ──────▶│  StudentTHMM │
-                     │  (Layer 1)   │
-                     └──────┬──────┘
-                            │  {μ, σ, ν, A, forward_probs}
+                     ┌─────────────────────┐
+  log-returns ──────▶│  Student-t HMM       │
+                     │  (Layer 1)           │
+                     └──────┬──────────────┘
+                            │  regime, blended probs, HMM params
                             ▼
-                     ┌──────────────────┐
-  last 50 returns ──▶│  ParticleFilter   │
-                     │  (Layer 2)        │
-                     └──────┬───────────┘
-                            │  blended_probs, volScale, A'
+                     ┌─────────────────────┐
+  last 50 returns ──▶│  Particle Filter     │
+                     │  (Layer 2, 500 ptcl) │
+                     └──────┬──────────────┘
+                            │  volScale, persistenceBoost, A'
                             ▼
-                     ┌──────────────────┐
-  current price ────▶│  RegimeAwareSim   │
-  horizon steps ────▶│  (Layer 3)        │
-                     └──────┬───────────┘
-                            │  List<PathResult>, DistributionStats
+                     ┌─────────────────────┐
+  current price ────▶│  MC Simulation       │
+  HMM params, A' ──▶│  (Layer 3, 10k paths)│
+                     └──────┬──────────────┘
+                            │  price distribution, barrier stats
                             ▼
-                     ┌──────────────────┐
-  regime info ──────▶│  Trade Builder    │
-  current price ────▶│  (Layer 4)        │
-                     └──────┬───────────┘
+                     ┌─────────────────────┐
+  regime + params ──▶│  Trade Builder       │
+  MC results ───────▶│  (Layer 4)           │
+                     └──────┬──────────────┘
                             │  List<TradingPosition>
                             ▼
-                       Final Output
+                     ┌─────────────────────┐
+  top 10 pairs ────▶│  Market Leaders Scan  │
+  7 timeframes ────▶│  (Leaderboard)        │
+                     └──────┬──────────────┘
+                            │  Ranked picks by EV
+                            ▼
+                       Presentation Layer
 ```
 
 ---
@@ -214,211 +219,140 @@ All constants consolidated across layers:
 
 | Constant | Value | Location | Layer |
 |----------|-------|----------|-------|
-| `_nStates` | 3 | `RegimeDetectionService` | 1 |
-| HMM max iterations | 30 | `StudentTHMM.fit()` | 1 |
-| HMM convergence tol | 1e-4 | `StudentTHMM.fit()` | 1 |
-| Drift shrinkage λ | 0.8 | `StudentTHMM` | 1 |
-| ν grid | [2.5, 3, 4, 5, 7, 10, 15, 30] | `StudentTHMM._nuGrid` | 1 |
-| `nParticles` | 500 | `ParticleFilter` | 2 |
-| PF window | last 50 obs | `RegimeDetectionService.detect()` | 2 |
-| PF resampling threshold | ESS < N/2 | `ParticleFilter.update()` | 2 |
-| PF volScale mean-reversion | 0.92 | `ParticleFilter.update()` | 2 |
-| PF volScale clamp | [0.5, 2.5] | `ParticleFilter.update()` | 2 |
-| HMM/PF blend | 70% HMM / 30% PF | `RegimeDetectionService.detect()` | 2 |
-| Persistence boost max | 0.10 | `_persistenceAdjust()` | 2 |
-| A' diagonal cap | 0.98 | `_persistenceAdjust()` | 2 |
-| `_numSim` | 10,000 | `AnalysisService` | 3 |
-| Random seed | 42 | Multiple locations | 3 |
-| SL multiplier k | 1.5 | `AnalysisService._slMultiplier` | 4 |
-| Transaction cost | 0.2% | `AnalysisService._txCost` | 4 |
-| Slippage | 0.05% | `AnalysisService._slippage` | 4 |
-| Kelly fraction | 0.5 (half-Kelly) | `AnalysisService._kellyFraction` | 4 |
-| Max position size | 5% | `AnalysisService._maxPositionSize` | 4 |
-| Min TP probability | 40% | `AnalysisService._minTpProb` | 4 |
-| Min candles | 168 (1 week hourly) | `AnalysisService.analyzePair()` | — |
+| HMM states | 3 (LOW, MEDIUM, HIGH) | `StudentTHMM` | 1 |
+| HMM emission | Student-t (ECME M-step) | `StudentTHMM` | 1 |
+| Drift shrinkage | 0.8 | `StudentTHMM` | 1 |
+| ν grid search | {2.5, 3, 4, 5, 7, 10, 15, 30} | `StudentTHMM` | 1 |
+| Blending ratio | 70% HMM / 30% PF | `RegimeDetectionService` | 1–2 |
+| Particles | 500 | `ParticleFilter` | 2 |
+| volScale mean reversion | 0.92v + 0.08 | `ParticleFilter` | 2 |
+| volScale clamp | [0.5, 2.5] (tunable) | `AlgorithmConfig` | 2 |
+| Persistence multiplier | 0.10 (tunable) | `AlgorithmConfig` | 2 |
+| Resampling threshold | ESS < N/2 | `ParticleFilter` | 2 |
+| MC paths | 10,000 | `AnalysisService._numSim` | 3 |
+| Student-t innovations | Marsaglia-Tsang + Box-Muller | `RegimeAwareSimulator` | 3 |
+| Transaction cost | 0.1% (0.001, tunable) | `AlgorithmConfig.txCost` | 4 |
+| Slippage | 0.02% (0.0002, tunable) | `AlgorithmConfig.slippage` | 4 |
+| SL multiplier | 1.2 (tunable) | `AlgorithmConfig.stopMultiplier` | 4 |
+| Drift multiplier | 50.0 (tunable) | `AlgorithmConfig.driftMultiplier` | 4 |
+| Kelly fraction | 0.5 (half-Kelly) | `AnalysisService` | 4 |
+| Max Kelly size | 5% (tunable) | `AlgorithmConfig.kellyMax` | 4 |
+| Period scale clamp | [0.5, 2.5] (tunable) | `AlgorithmConfig` | 4 |
+| Leverage base factor | 0.35 | `AnalysisService` | 4 |
+| Max leverage | 75 (tunable) | `AlgorithmConfig.maxLeverage` | 4 |
+| Base position pct | 0.001 (tunable) | `AlgorithmConfig.basePositionPct` | — |
+| TP filter threshold | 0.40 (40%) | `AnalysisService` | 4 |
+| Min returns for analysis | 50 | `AnalysisService` | — |
+| Klines fetched | 168 (1H interval) | `AnalysisService` | — |
 
 ---
 
 ## 10. Data Models
 
+### Dart (Flutter)
+
 **File:** `lib/models/analysis_models.dart`
 
-### TimePeriod (enum)
-
-| Value | Label | Hours |
-|-------|-------|-------|
-| oneHour | 1H | 1 |
-| fourHours | 4H | 4 |
-| oneDay | 1D | 24 |
-| oneWeek | 1W | 168 |
-| oneMonth | 1M | 720 |
-
-### VolatilityRegime (enum)
-
-| Value | Label | Description |
-|-------|-------|-------------|
-| low | Low Volatility | Calm / Mean-Reverting |
-| medium | Medium Volatility | Trending / Normal |
-| high | High Volatility | Turbulent / Crisis |
-
-### TradeDirection (enum)
-
-| Value | Label |
-|-------|-------|
-| long | Long |
-| short | Short |
-
-### RegimeInfo
+#### CryptoAnalysisResult
 
 | Field | Type | Description |
 |-------|------|-------------|
-| currentRegime | VolatilityRegime | Most likely regime |
-| regimeProbs | List\<double\> | Probability per regime [low, med, high] |
-| regimeAnnualisedVols | List\<double\> | Annualised vol per regime (%) |
-| regimeDrifts | List\<double\> | Hourly drift per regime |
-| regimeNus | List\<double\> | Student-t ν per regime |
-| transitionFromCurrent | List\<double\> | Transition probs from current regime |
-| stabilityScore | int | Self-transition prob × 100 (0–100) |
-| regimeEntropy | double | −Σ π_k ln(π_k), higher = more uncertain |
+| regime | `int` | Detected regime index (0=LOW, 1=MEDIUM, 2=HIGH) |
+| regimeProbs | `List<double>` | Blended probability per regime |
+| stability | `int` | Regime stability score (0–100) |
+| entropy | `double` | Regime entropy |
+| annualisedVol | `double` | Annualised volatility |
+| volScale | `double` | Volatility scaling factor from particle filter |
+| persistenceBoost | `double` | Entropy-gated persistence boost |
+| positions | `Map<String, TradingPosition>` | Named positions (conservative/aggressive × long/short) |
+| distributionStats | `DistributionStats` | MC price distribution statistics |
+| summary | `String` | Formatted analysis summary |
 
-### DistributionStats
-
-| Field | Type | Description |
-|-------|------|-------------|
-| mean | double | Mean simulated price |
-| stdDev | double | Std dev of simulated prices |
-| skewness | double | Third standardised moment |
-| kurtosis | double | Fourth standardised moment |
-| p5..p95 | double | Distribution percentiles |
-
-### TradingPosition
+#### TradingPosition
 
 | Field | Type | Description |
 |-------|------|-------------|
-| direction | TradeDirection | Long or Short |
-| entryPrice | double | Limit entry price |
-| exitPrice | double | Take profit target |
-| stopLoss | double | Stop loss price |
-| predictedROI | double | (exit-entry)/entry × 100 |
-| confidenceScore | int | TP barrier probability as % (5–95) |
-| tpProbability | double | Fraction of paths hitting TP (barrier) |
-| slProbability | double | Fraction of paths hitting SL (barrier) |
-| expectedValue | double | EV_adj in $ terms |
-| positionSizePct | double | Half-Kelly position as % of capital |
-| strategyDescription | String | Human-readable strategy summary |
+| direction | `String` | "LONG" or "SHORT" |
+| entry | `double` | Entry price |
+| exit | `double` | Take profit target (conditional expectation from MC) |
+| stop | `double` | Stop loss price |
+| ev | `double` | Expected value in $ (leveraged) |
+| roi | `double` | Expected ROI % (leveraged) |
+| confidence | `double` | TP barrier probability (0–1) |
+| kellySize | `double` | Half-Kelly position size % |
+| positionSize | `double` | Position size in $ |
+| tpProbability | `double` | TP barrier hit probability |
+| slProbability | `double` | SL barrier hit probability |
+| leverage | `int` | Calculated leverage multiplier (1–maxLeverage) |
+| durationHours | `int` | Expected duration in hours |
+| strategy | `String` | Formatted strategy description |
 
-### CryptoAnalysisResult
+#### AlgorithmConfig
 
-| Field | Type | Description |
-|-------|------|-------------|
-| positions | List\<TradingPosition\> | Ranked trading positions |
-| regimeInfo | RegimeInfo? | Regime detection metadata |
-| distributionStats | DistributionStats? | Full simulation distribution stats |
-| analysisSummary | String | Text summary |
+17 tunable parameters — see [dynamic-adjustments.md §1](dynamic-adjustments.md) for full listing.
 
-### LeadPosition
+#### TimePeriod
 
-| Field | Type | Description |
-|-------|------|-------------|
-| symbol | String | Trading pair |
-| direction | TradeDirection | Long or Short |
-| entryPrice | double | Entry price |
-| exitPrice | double | TP target |
-| stopLoss | double | SL price |
-| predictedROI | double | ROI % |
-| confidenceScore | int | TP prob as % |
-| expectedValue | double | EV_adj |
-| reasoning | String | Selection reasoning |
+| Key | Label | Hours |
+|-----|-------|-------|
+| 1H | 1 Hour | 1 |
+| 4H | 4 Hours | 4 |
+| 12H | 12 Hours | 12 |
+| 1D | 1 Day | 24 |
+| 2D | 2 Days | 48 |
+| 1W | 1 Week | 168 |
+| 1M | 1 Month | 720 |
 
 ---
 
 ## 11. File Map
 
+### Flutter/Dart
+
 | File | Purpose |
 |------|---------|
-| `lib/services/regime_detection_service.dart` | Student-t HMM (Baum-Welch + ECME), Particle Filter, MC Simulator with path tracking, persistence adjustment, `RegimeDetectionService` orchestrator |
-| `lib/services/analysis_service.dart` | Pipeline orchestration, long/short position building, barrier pricing, EV calculation, Kelly sizing, trade filtering, leaderboard scanner |
-| `lib/services/binance_service.dart` | Legacy Binance API client |
-| `lib/services/exchange_service.dart` | Abstract ExchangeService interface |
-| `lib/services/exchanges/binance_exchange_service.dart` | Binance implementation of ExchangeService |
-| `lib/services/exchanges/coinbase_exchange_service.dart` | Coinbase implementation of ExchangeService |
-| `lib/services/exchanges/mexc_exchange_service.dart` | MEXC implementation of ExchangeService |
-| `lib/models/analysis_models.dart` | Data models: `TimePeriod`, `VolatilityRegime`, `TradeDirection`, `RegimeInfo`, `DistributionStats`, `TradingPosition`, etc. |
-| `lib/models/binance_models.dart` | `KlineData`, `BinancePair` models (shared across exchanges) |
-| `lib/models/exchange_models.dart` | `Exchange` enum (binance, coinbase, mexc) |
-| `lib/providers/market_providers.dart` | Riverpod state management providers |
-| `lib/providers/exchange_provider.dart` | Exchange selection provider (persisted to SharedPreferences) |
-| `lib/widgets/analysis_section.dart` | UI: analysis results + regime detection card |
-| `lib/widgets/position_card.dart` | UI: position card with direction badge, entry/exit/SL, EV, barrier probs |
-| `lib/widgets/leaderboard_section.dart` | UI: market leaderboard display |
+| `lib/services/regime_detection_service.dart` | Student-t HMM (Baum-Welch EM), 500-particle filter, regime-switching MC simulator |
+| `lib/services/analysis_service.dart` | 4-layer analysis pipeline: orchestrates HMM → PF → MC → trade construction |
+| `lib/services/binance_service.dart` | Binance REST API client |
+| `lib/services/exchange_service.dart` | Abstract exchange service interface |
+| `lib/models/analysis_models.dart` | Data models: CryptoAnalysisResult, TradingPosition, AlgorithmConfig, TimePeriod, etc. |
+| `lib/models/exchange_models.dart` | Exchange-specific models |
+| `lib/providers/market_providers.dart` | Riverpod state management for market data and analysis |
+| `lib/providers/exchange_provider.dart` | Exchange selection state |
+| `lib/providers/ludomania_provider.dart` | Ludomania mode (high-risk YOLO positions) |
+| `lib/providers/theme_provider.dart` | Theme state |
+| `lib/widgets/position_card.dart` | Position card with trade details, leverage badge, exchange deep link |
+| `lib/widgets/analysis_section.dart` | Regime detection card, outlook, position cards grid |
+| `lib/widgets/leaderboard_section.dart` | Market leaders scan results |
+| `lib/widgets/controls_card.dart` | Symbol search, investment amount, time period selector |
+| `lib/theme/app_theme.dart` | Material theme configuration |
+| `lib/main.dart` | App entry point |
 
 ---
 
 ## 12. Changelog
 
+### 2026-03-24 — Flutter App Documentation Update
+
+Complete rewrite of all algorithm docs to accurately reflect the Flutter/Dart analytics app codebase.
+
+**Key updates:**
+- Docs now reference Dart/Flutter file paths and class names
+- Regime detection: Student-t HMM with Baum-Welch EM (not threshold-based classification)
+- Adaptation: 500-particle Sequential Monte Carlo filter (not simple volScale ratio)
+- Simulation: 10,000-path regime-switching Monte Carlo with Student-t innovations (not analytical formulas)
+- Trade construction: Barrier pricing via MC path counting, conditional expectations (not formula-based)
+- Leverage system: Documented with regime-scale and confidence-scale calculation
+- AlgorithmConfig: 17 tunable parameters documented
+- New timeframes: 12H and 2D added
+- Both BUY and SELL positions always produced
+- Multi-exchange support (Binance, Coinbase, MEXC)
+- Presentation focus: analytical tool, not headless trading bot
+
+### 2026-03-23 — Previous Documentation (TypeScript/Kotlin)
+
+Docs described a simpler engine (threshold-based regime detection, analytical formulas) for a Next.js web app and Android headless trading bot. See git history for those docs.
+
 ### 2026-03-05 — Documentation Split
 
-Split monolithic algorithm.md into focused per-layer documents:
-- [hmm.md](hmm.md) — Student-t HMM details
-- [particle_filter.md](particle_filter.md) — Particle filter & regime persistence
-- [monte_carlo.md](monte_carlo.md) — MC simulation & forecast distribution
-- [trade_construction.md](trade_construction.md) — Trade building, barrier pricing, EV, Kelly
-- [leaderboard.md](leaderboard.md) — Cross-asset scanning & risk controls
-
-This file now serves as the pipeline overview and inter-layer data flow reference.
-
-### 2026-03-04 — Full Probabilistic Regime-Switching Engine (v2)
-
-Complete rewrite implementing the production algorithm specification.
-
-**HMM → Student-t emissions:**
-- Replaced Gaussian emission model with Student-t (fat tails)
-- Added per-state degrees of freedom ν_k, estimated via grid search in M-step
-- Added auxiliary weights (ũ) in M-step for proper Student-t ECME
-- Added drift shrinkage (80% toward zero) for regime means
-- Added log-gamma via Lanczos approximation for Student-t PDF
-
-**Particle Filter → simplified, Student-t weights:**
-- Removed `driftOffset` from particles (only `volScale` + `regime`)
-- Changed evolution: `0.92 × old + 0.08 × 1 + 0.03 × N(0,1)`, clamped [0.5, 2.5]
-- Weight update uses Student-t log-PDF instead of Gaussian
-- Changed blend to 70% HMM / 30% PF (was 40/60)
-
-**Regime persistence:**
-- Added regime entropy calculation: −Σ π_k ln(π_k)
-- Build persistence-adjusted matrix A': boost diagonal by up to 0.10 based on 1−entropy
-- A' used only for simulation; original A stored for reporting
-
-**MC Simulation → path-aware, Student-t innovations:**
-- Student-t random sampling via Marsaglia-Tsang gamma + Box-Muller normal
-- Full path tracking: maxPrice, minPrice, maxDrawdown per path
-- Uses persistence-adjusted A' for regime transitions
-- Returns `List<PathResult>` instead of `List<double>`
-
-**Position building → long + short, barrier pricing, EV, Kelly:**
-- Added SHORT position support (entry above market, exit below)
-- Stop loss on every position: entry ± 1.5 × distribution stddev
-- Barrier TP probability: fraction of paths where maxPrice hits exit (long) or minPrice hits exit (short)
-- Barrier SL probability: fraction of paths where minPrice hits stop (long) or maxPrice hits stop (short)
-- Expected value: EV = TP_prob × gain − SL_prob × loss − costs
-- Kelly position sizing: half-Kelly, capped at 5%
-- Trade acceptance filter: reject if EV ≤ 0 or TP_prob < 40%
-- Exit calculated as conditional expectation (mean of qualifying paths), not percentile
-
-**Leaderboard → entropy-penalized ranking:**
-- Score = EV × (1 − normalizedEntropy)
-- Penalizes pairs with uncertain regime identification
-
-**Models:**
-- `TradingPosition`: added direction, stopLoss, tpProbability, slProbability, expectedValue, positionSizePct
-- `RegimeInfo`: added regimeEntropy, regimeNus
-- Added `TradeDirection` enum and `DistributionStats` class
-- `LeadPosition`: added direction, stopLoss, expectedValue
-
-**UI:**
-- Position card: direction badge (LONG/SHORT), stop loss display, EV, TP/SL barrier probabilities
-- Regime card: updated engine label to "Student-t HMM"
-
-### 2026-03-04 (earlier) — Initial HMM + PF + MC Engine (v1)
-
-Previous implementation with Gaussian emissions, no path tracking, no short positions, no barrier pricing, no EV/Kelly. See git history for details.
+Split monolithic algorithm.md into focused per-layer documents.

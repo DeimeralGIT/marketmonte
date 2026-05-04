@@ -1,120 +1,185 @@
-# Particle Filter & Regime Persistence
+# Volatility Adaptation (Layer 2)
 
-> **Layer 2 — Volatility Adaptation**  
-> **File:** `lib/services/regime_detection_service.dart`, class `ParticleFilter`  
+> **Layer 2 — 500-Particle Sequential Monte Carlo Filter**
+> **File:** `lib/services/regime_detection_service.dart` (class `ParticleFilter`)
 > **Parent doc:** [algorithm.md](algorithm.md)
 
 ---
 
 ## 1. Purpose
 
-Adapts local volatility beyond the HMM's batch structure. Provides real-time regime tracking and a `volScale` correction applied during Monte Carlo simulation (see [monte_carlo.md](monte_carlo.md)).
+Tracks real-time volatility evolution using a **500-particle Sequential Monte Carlo** (SMC) filter. Each particle carries a regime state and a mean-reverting volatility scale factor (volScale). The filter produces a weighted volScale estimate and refined regime probabilities that are blended with HMM output for the final regime decision.
 
 ---
 
 ## 2. Particle State
 
-Each of **500 particles** carries:
+Each of the 500 particles maintains:
 
-| Field | Description | Init |
-|-------|-------------|------|
-| `regime` | Current discrete state (0, 1, or 2) | Round-robin |
-| `volScale` | Multiplicative vol scaling factor | 1.0 |
-| `weight` | Normalised importance weight | 1/N |
+| Field | Type | Description |
+|-------|------|-------------|
+| `regime` | int (0/1/2) | Current regime assignment |
+| `volScale` | double [0.5, 2.5] | Local volatility scaling factor |
+| `weight` | double | Importance weight (sums to 1.0 across all particles) |
 
----
-
-## 3. Update Step (per observation)
-
-For each new log-return:
-
-**1. Propagate:**
-- Regime transition via A[old_regime][·]
-- Vol evolution (mean-reverting to 1.0):
-  ```
-  volScale ← 0.92 × volScale + 0.08 × 1.0 + 0.03 × N(0,1)
-  clamp to [0.5, 2.5]
-  ```
-
-**2. Weight (Student-t likelihood):**
-```
-σ_eff = σ_regime × volScale
-logW = log(old_weight) + log_StudentT(r_t | μ_regime, σ_eff, ν_regime)
-```
-Normalise weights to sum to 1 (log-space max-subtraction for stability).
-
-**3. Resample:**
-- ESS = 1 / Σ w_i²
-- If ESS < N/2 → systematic resampling, weights reset to 1/N
+All particles are initialized with `regime = i % 3` (round-robin), `volScale = 1.0`, and `weight = 1/N`.
 
 ---
 
-## 4. PF Window
+## 3. Update Cycle
 
-Last 50 observations (or all if fewer). Focuses adaptation on recent market dynamics.
+For each new observation (log-return), every particle undergoes three steps:
+
+### 3.1 Propagation
+
+**Regime transition:** Sample a new regime from the HMM transition matrix row:
+
+```
+u ~ Uniform(0, 1)
+cumProb = 0
+for j in 0..2:
+    cumProb += A[current_regime][j]
+    if u <= cumProb:
+        regime = j
+        break
+```
+
+**VolScale evolution (mean-reverting random walk):**
+
+```
+volScale = clamp(0.92 * volScale + 0.08 * 1.0 + 0.03 * N(0,1),  0.5,  2.5)
+```
+
+Where:
+- `0.92` = autoregressive decay toward the mean
+- `0.08` = mean-reversion pull toward 1.0
+- `0.03 * N(0,1)` = stochastic innovation
+
+This ensures volScale slowly reverts toward 1.0 (neutral) while allowing it to drift with market conditions.
+
+### 3.2 Weighting
+
+Each particle's weight is updated using the **Student-t log-likelihood** of the observation under the particle's current regime and volScale:
+
+```
+mu = regimeMeans[regime]
+sigma = clamp(regimeStds[regime] * volScale, 1e-8, inf)
+nu = regimeNus[regime]
+
+logW = log(old_weight) + logStudentT(observation, mu, sigma, nu)
+```
+
+Log-weights are shifted by max(logW) before exponentiation (log-sum-exp trick for numerical stability), then normalized to sum to 1.0.
+
+### 3.3 Systematic Resampling
+
+Triggered when the **Effective Sample Size** (ESS) drops below N/2 = 250:
+
+```
+ESS = 1 / sum(w_i^2)
+```
+
+When ESS < 250, systematic resampling is performed:
+
+```
+step = 1/N
+u = Uniform(0, step)    // single random offset
+for i in 0..N-1:
+    find particle j such that CDF[j] >= u
+    copy particle j with weight = 1/N
+    u += step
+```
+
+This prevents particle degeneracy while maintaining diversity in the population.
 
 ---
 
-## 5. Probability Blending
+## 4. Outputs
 
-Final regime probabilities combine the HMM's full-sequence view with the PF's real-time adaptation:
+### 4.1 Weighted Mean VolScale
 
 ```
-blended[s] = 0.7 × HMM_forward_prob[s] + 0.3 × PF_prob[s]
+volScale = sum(w_i * volScale_i)     for all particles
 ```
 
-HMM gets majority weight (70%) since it has full-sequence context; PF (30%) adds real-time adaptation.
+Consumed by Layer 3 (MC simulation scaling) and Layer 4 (exit target adaptation). Typical range [0.5, 2.5]:
 
-### Outputs
+- **volScale > 1.0:** Recent volatility exceeds the HMM's learned regime sigma — wider exits and stops
+- **volScale < 1.0:** Recent volatility is below regime sigma — tighter exits and stops
+- **volScale ~ 1.0:** Neutral, no adaptation needed
 
-- `getRegimeProbabilities()`: weighted histogram of particle regimes
-- `getVolScaleMean()`: weighted average volScale → applied as multiplier in MC sim
-- `getVolScaleStd()`: uncertainty in volScale estimate
+### 4.2 Regime Probabilities
+
+```
+pfProbs[s] = sum(w_i)     for particles where regime == s
+```
+
+These are blended with HMM forward-filtered probabilities (70/30) in `RegimeDetectionService.detect()` to produce the final regime decision.
+
+### 4.3 VolScale Standard Deviation
+
+```
+volScaleStd = sqrt(sum(w_i * (volScale_i - meanVolScale)^2))
+```
+
+Available as a diagnostic measure of volScale uncertainty across the particle population.
 
 ---
 
-## 6. Regime Persistence Adjustment
+## 5. Persistence Boost
 
-**Method:** `RegimeDetectionService._persistenceAdjust()`
-
-Boosts the diagonal of the transition matrix to prevent over-switching in simulation.
-
-### 6.1 Regime Entropy
+Computed from the blended regime probabilities (not directly by the Particle Filter, but in the `RegimeDetectionService`):
 
 ```
-RegimeEntropy = −Σ π_k · ln(π_k)
+H = -sum(p_s * ln(p_s))    for s in {0, 1, 2}
+normalizedEntropy = H / ln(3)
+persistenceBoost = persistenceMultiplier * (1 - normalizedEntropy)
 ```
 
-Max entropy (3 states) = ln(3) ≈ 1.099. Higher entropy = more uncertain regime.
+Where `persistenceMultiplier` defaults to **0.10** (tunable via `AlgorithmConfig.persistenceMultiplier`).
 
-### 6.2 Persistence Boost
+- **Certain regime** (low entropy): `persistenceBoost` approaches 0.10
+- **Uncertain regime** (high entropy, near-uniform): `persistenceBoost` approaches 0.00
+
+The persistence boost modifies the HMM transition matrix diagonal to create the sticky matrix A' consumed by the MC simulator (see [hmm.md section 8](hmm.md#8-entropy-and-persistence-adjustment)).
+
+---
+
+## 6. Particle Filter Window
+
+The filter processes the **last 50 log-returns** (or all returns if fewer than 50 are available). This sliding window keeps the filter responsive to recent market conditions without being overwhelmed by older data.
+
+The PF is run twice in the pipeline:
+1. Inside `RegimeDetectionService.detect()` — for blended regime probabilities and persistence
+2. Inside `AnalysisService._runHybridEngine()` — for the volScale estimate consumed by MC and trade construction
+
+Both use seed 42 for reproducibility.
+
+---
+
+## 7. Interaction with HMM
+
+The Particle Filter receives its regime parameters (means, stds, nus) and transition matrix from the Student-t HMM (Layer 1). It does **not** learn its own emission parameters — it uses the HMM's learned values and adds the volScale adaptation layer on top.
 
 ```
-normalizedEntropy = RegimeEntropy / ln(3)
-persistenceBoost = 0.10 × (1 - normalizedEntropy)
+HMM learns: mu_s, sigma_s, nu_s, A    (from full data via Baum-Welch)
+PF uses:    A for regime transitions
+            mu_s, sigma_s * volScale_i, nu_s    for Student-t weighting
 ```
-
-When the regime is certain (low entropy), self-transition probability is boosted by up to 0.10. When uncertain (entropy near max), no boost.
-
-### 6.3 Adjusted Matrix A'
-
-```
-A'[i][i] = clamp(A[i][i] + persistenceBoost, 0, 0.98)
-```
-
-Off-diagonal entries are renormalised to preserve row sums = 1. A' is used **only** for simulation (Layer 3); the original A is stored for reporting.
 
 ---
 
 ## Configuration Constants
 
-| Constant | Value | Location |
-|----------|-------|----------|
-| `nParticles` | 500 | `ParticleFilter` |
-| PF window | last 50 obs | `RegimeDetectionService.detect()` |
-| Resampling threshold | ESS < N/2 | `ParticleFilter.update()` |
-| volScale mean-reversion | 0.92 | `ParticleFilter.update()` |
-| volScale clamp | [0.5, 2.5] | `ParticleFilter.update()` |
-| HMM/PF blend | 70% HMM / 30% PF | `RegimeDetectionService.detect()` |
-| Persistence boost max | 0.10 | `_persistenceAdjust()` |
-| A' diagonal cap | 0.98 | `_persistenceAdjust()` |
+| Constant | Default | Tunable | Description |
+|----------|---------|---------|-------------|
+| Particles (N) | 500 | No | Particle count |
+| Mean reversion decay | 0.92 | No | AR(1) coefficient for volScale |
+| Mean reversion target | 1.0 | No | Long-run volScale mean |
+| Innovation noise | 0.03 | No | Stochastic volScale perturbation |
+| volScale clamp | [0.5, 2.5] | Yes | `AlgorithmConfig.volScaleMin/Max` |
+| Resampling threshold | ESS < N/2 | No | Systematic resampling trigger |
+| Persistence multiplier | 0.10 | Yes | `AlgorithmConfig.persistenceMultiplier` |
+| Window size | last 50 returns | No | Sliding window for PF input |
+| Blending ratio | 70% HMM / 30% PF | No | Regime probability blending |
+| Seed | 42 | No | Deterministic reproducibility |

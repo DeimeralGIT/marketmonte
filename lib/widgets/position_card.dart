@@ -27,6 +27,7 @@ class PositionCard extends ConsumerWidget {
   final double investmentAmount;
   final TimePeriod timePeriod;
   final bool isLudomania;
+  final int leverage;
 
   const PositionCard({
     super.key,
@@ -46,6 +47,7 @@ class PositionCard extends ConsumerWidget {
     required this.investmentAmount,
     required this.timePeriod,
     this.isLudomania = false,
+    this.leverage = 1,
   });
 
   @override
@@ -222,6 +224,33 @@ class PositionCard extends ConsumerWidget {
                                   ),
                                 ],
                               ),
+                              // Leverage badge
+                              if (leverage > 1)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    color: const Color(
+                                      0xFF60A5FA,
+                                    ).withValues(alpha: 0.12),
+                                    border: Border.all(
+                                      color: const Color(
+                                        0xFF60A5FA,
+                                      ).withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${leverage}x',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF60A5FA),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                           const SizedBox(height: 8),
@@ -331,6 +360,29 @@ class PositionCard extends ConsumerWidget {
                             valueColor: scaledEV > 0
                                 ? const Color(0xFF4ADE80)
                                 : const Color(0xFFF87171),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Leverage / Position Size row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.leverage'),
+                            value: '${leverage}x',
+                            valueColor: const Color(0xFF60A5FA),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _PriceBox(
+                            label: tr('position.positionSize'),
+                            value: '${positionSizePct.toStringAsFixed(1)}%',
+                            valueColor: AppColors.accent,
                           ),
                         ),
                       ],
@@ -780,8 +832,12 @@ class PositionCard extends ConsumerWidget {
         return tr('timePeriod.1H');
       case TimePeriod.fourHours:
         return tr('timePeriod.4H');
+      case TimePeriod.twelveHours:
+        return tr('timePeriod.12H');
       case TimePeriod.oneDay:
         return tr('timePeriod.1D');
+      case TimePeriod.twoDays:
+        return tr('timePeriod.2D');
       case TimePeriod.oneWeek:
         return tr('timePeriod.1W');
       case TimePeriod.oneMonth:

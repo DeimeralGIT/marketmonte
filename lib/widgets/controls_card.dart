@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -18,18 +19,26 @@ class ControlsCard extends ConsumerStatefulWidget {
 class _ControlsCardState extends ConsumerState<ControlsCard> {
   late TextEditingController _searchController;
   late TextEditingController _investmentController;
+  late FixedExtentScrollController _timePeriodController;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _investmentController = TextEditingController(text: '100');
+    final initialPeriodIndex = TimePeriod.values.indexOf(
+      ref.read(marketStateProvider).timePeriod,
+    );
+    _timePeriodController = FixedExtentScrollController(
+      initialItem: initialPeriodIndex,
+    );
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _investmentController.dispose();
+    _timePeriodController.dispose();
     super.dispose();
   }
 
@@ -185,7 +194,22 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
         ),
         TextField(
           controller: _searchController,
-          onChanged: (v) => notifier.setSearchQuery(v),
+          onChanged: (v) {
+            notifier.setSearchQuery(v);
+            final pairs = ref.read(pairsProvider).valueOrNull;
+            if (pairs != null) {
+              final query = v.toLowerCase();
+              final filtered = pairs
+                  .where((p) => p.symbol.toLowerCase().contains(query))
+                  .take(100)
+                  .toList();
+              final current = ref.read(marketStateProvider).selectedPair;
+              final hasSelected = filtered.any((p) => p.symbol == current);
+              if (!hasSelected && filtered.isNotEmpty) {
+                notifier.setSelectedPair(filtered.first.symbol);
+              }
+            }
+          },
           decoration: InputDecoration(
             hintText: tr('controls.filterHint'),
             prefixIcon: Icon(
@@ -408,63 +432,48 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
             ),
           ),
         ),
-        Row(
-          children: TimePeriod.values.map((period) {
-            final isSelected = marketState.timePeriod == period;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: period == TimePeriod.values.first ? 0 : 4,
-                ),
-                child: GestureDetector(
-                  onTap: () => notifier.setTimePeriod(period),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.accent.withValues(alpha: 0.15)
-                          : AppColors.background.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(
-                        AppTheme.borderRadius,
-                      ),
-                      border: Border.all(
-                        color: isSelected ? AppColors.accent : AppColors.border,
-                        width: isSelected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          period.label,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'monospace',
-                            color: isSelected
-                                ? AppColors.accent
-                                : AppColors.mutedForeground,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _timePeriodDisplayName(period),
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: isSelected
-                                ? AppColors.accent.withValues(alpha: 0.8)
-                                : AppColors.mutedForeground.withValues(
-                                    alpha: 0.7,
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
+        Container(
+          height: 120,
+          decoration: BoxDecoration(
+            color: AppColors.background.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: CupertinoPicker(
+            scrollController: _timePeriodController,
+            itemExtent: 36,
+            diameterRatio: 1.2,
+            magnification: 1.15,
+            useMagnifier: true,
+            squeeze: 1.0,
+            backgroundColor: Colors.transparent,
+            selectionOverlay: Container(
+              decoration: BoxDecoration(
+                border: Border.symmetric(
+                  horizontal: BorderSide(
+                    color: AppColors.accent.withValues(alpha: 0.3),
                   ),
                 ),
+                color: AppColors.accent.withValues(alpha: 0.08),
               ),
-            );
-          }).toList(),
+            ),
+            onSelectedItemChanged: (index) {
+              notifier.setTimePeriod(TimePeriod.values[index]);
+            },
+            children: TimePeriod.values.map((period) {
+              return Center(
+                child: Text(
+                  '${period.label}  \u00b7  ${_timePeriodDisplayName(period)}',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: 'monospace',
+                    color: AppColors.foreground,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ],
     );
@@ -523,8 +532,12 @@ class _ControlsCardState extends ConsumerState<ControlsCard> {
         return tr('timePeriod.1H');
       case TimePeriod.fourHours:
         return tr('timePeriod.4H');
+      case TimePeriod.twelveHours:
+        return tr('timePeriod.12H');
       case TimePeriod.oneDay:
         return tr('timePeriod.1D');
+      case TimePeriod.twoDays:
+        return tr('timePeriod.2D');
       case TimePeriod.oneWeek:
         return tr('timePeriod.1W');
       case TimePeriod.oneMonth:

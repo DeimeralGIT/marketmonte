@@ -167,6 +167,7 @@ class AnalysisSection extends StatelessWidget {
                           positionSizePct: entry.value.positionSizePct,
                           strategyDescription: entry.value.strategyDescription,
                           isLudomania: entry.value.isLudomania,
+                          leverage: entry.value.leverage,
                         ),
                       ),
                     );
@@ -197,6 +198,7 @@ class AnalysisSection extends StatelessWidget {
                       positionSizePct: entry.value.positionSizePct,
                       strategyDescription: entry.value.strategyDescription,
                       isLudomania: entry.value.isLudomania,
+                      leverage: entry.value.leverage,
                     ),
                   );
                 }),
@@ -225,6 +227,7 @@ class AnalysisSection extends StatelessWidget {
                     positionSizePct: ludo.positionSizePct,
                     strategyDescription: ludo.strategyDescription,
                     isLudomania: true,
+                    leverage: ludo.leverage,
                   ),
                 ),
               );
@@ -350,6 +353,27 @@ class AnalysisSection extends StatelessWidget {
 
           const SizedBox(height: 12),
 
+          // Volatility adaptation metrics
+          Row(
+            children: [
+              _buildMetricChip(
+                tr('analysis.volScaleLabel'),
+                analysis.volScale.toStringAsFixed(2),
+                analysis.volScale > 1.0
+                    ? const Color(0xFFF87171)
+                    : const Color(0xFF4ADE80),
+              ),
+              const SizedBox(width: 8),
+              _buildMetricChip(
+                tr('analysis.persistenceLabel'),
+                analysis.persistenceBoost.toStringAsFixed(3),
+                const Color(0xFF60A5FA),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
           // Engine label
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -464,6 +488,36 @@ class AnalysisSection extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9,
                 color: AppColors.mutedForeground.withValues(alpha: 0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetricChip(String label, String value, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: color.withValues(alpha: 0.08),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '$label: ',
+              style: TextStyle(fontSize: 10, color: AppColors.mutedForeground),
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: color,
               ),
             ),
           ],

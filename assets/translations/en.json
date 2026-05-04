@@ -36,16 +36,18 @@
         "medLabel": "Med",
         "highLabel": "High",
         "annVol": "Ann. Vol",
-        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC",
+        "volScaleLabel": "Vol Scale",
+        "persistenceLabel": "Persistence",
+        "engineLabel": "Student-t HMM (Baum-Welch) + Particle Filter (500) + State-Space MC + Leverage",
         "outlook": "Outlook: {symbol}",
         "recommendedPositions": "Recommended Positions",
         "analysisError": "Analysis Error",
         "bullish": "bullish",
         "bearish": "bearish",
-        "summaryTemplate": "Hybrid Engine (Student-t HMM + PF + State-Space MC, {horizon} horizon, {paths} paths): {symbol} detected in {regime} regime ({confidence}% confidence, stability {stability}/100, entropy {entropy}%). Outlook is {trend} with regime-adjusted annualised vol {annVol}%. Median price ${median} (P25: ${p25}, P75: ${p75}). Skew {skew}, kurt {kurt}.",
-        "strategyConservative": "{regime} {direction} (conservative): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%. Stability {stability}/100.",
-        "strategyAggressive": "{regime} {direction} (aggressive): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%.",
-        "strategyLudomania": "🔥 {regime} {direction} (ludomania): {discount}% {side} market. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. High risk/reward YOLO play.",
+        "summaryTemplate": "Hybrid Engine (Student-t HMM + PF + State-Space MC, {horizon} horizon, {paths} paths): {symbol} detected in {regime} regime ({confidence}% confidence, stability {stability}/100, entropy {entropy}%). Outlook is {trend} with regime-adjusted annualised vol {annVol}%. Vol scale: {volScale}. Median price ${median} (P25: ${p25}, P75: ${p75}). Skew {skew}, kurt {kurt}.",
+        "strategyConservative": "{regime} {direction} (conservative): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%. Stability {stability}/100. Leverage {leverage}x.",
+        "strategyAggressive": "{regime} {direction} (aggressive): {orderType} {discount}% {side} market. TP barrier prob {tpProb}%, SL barrier prob {slProb}%. EV ${ev}. Kelly {kelly}%. Leverage {leverage}x.",
+        "strategyLudomania": "🔥 {regime} {direction} (ludomania): {discount}% {side} market. TP {tpProb}%, SL {slProb}%. EV ${ev}. Kelly {kelly}%. Leverage {leverage}x. High risk/reward YOLO play.",
         "regimeLowVolShort": "Low-Vol",
         "regimeTrendingShort": "Trending",
         "regimeHighVolShort": "High-Vol",
@@ -59,8 +61,8 @@
     "leaderboard": {
         "globalScan": "Global Market Leaders Scan",
         "topAlpha": "Top Alpha Opportunities",
-        "reasoningTemplate": "Regime-adaptive pick: {regime} regime detected (stability {stability}/100, entropy {entropy}%). {direction} position. Student-t HMM + PF engine, {paths} paths over {horizon}. EV: ${ev}.",
-        "globalOutlookTemplate": "Hybrid regime-aware scan ({horizon} horizon): Student-t HMM + PF + State-Space MC across {pairsCount} high-volume pairs. Market regime distribution: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leaders ranked by entropy-penalized expected value."
+        "reasoningTemplate": "Regime-adaptive pick: {regime} regime detected (stability {stability}/100, entropy {entropy}%). {direction} position. Student-t HMM + PF engine, {paths} paths over {horizon}. EV: ${ev}. Leverage: {leverage}x.",
+        "globalOutlookTemplate": "Hybrid regime-aware scan ({horizon} horizon): Student-t HMM + PF + State-Space MC across {pairsCount} high-volume pairs. Market regime distribution: {lowCount} {lowVolLabel}, {medCount} {trendingLabel}, {highCount} {highVolLabel}. Leaders ranked by entropy-penalized expected value with leveraged returns."
     },
     "position": {
         "long": "LONG",
@@ -71,6 +73,8 @@
         "exitTarget": "Exit Target",
         "stopLoss": "Stop Loss",
         "expectedValue": "Expected Value",
+        "leverage": "Leverage",
+        "positionSize": "Position Size",
         "slProbability": "SL Probability",
         "tpProbability": "TP Probability",
         "size": "SIZE",
@@ -110,7 +114,9 @@
     "timePeriod": {
         "1H": "1 Hour",
         "4H": "4 Hours",
+        "12H": "12 Hours",
         "1D": "1 Day",
+        "2D": "2 Days",
         "1W": "1 Week",
         "1M": "1 Month"
     },

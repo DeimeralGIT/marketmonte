@@ -137,6 +137,7 @@ class LeaderboardSection extends StatelessWidget {
       confidenceScore: pick.confidenceScore,
       expectedValue: pick.expectedValue,
       strategyDescription: pick.reasoning,
+      leverage: pick.leverage,
     );
   }
 }

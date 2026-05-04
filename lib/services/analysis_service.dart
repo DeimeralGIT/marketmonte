@@ -7,12 +7,21 @@ import 'regime_detection_service.dart';
 
 class AnalysisService {
   ExchangeService _exchangeService;
+  AlgorithmConfig _algoConfig;
 
-  AnalysisService(this._exchangeService);
+  AnalysisService(
+    this._exchangeService, [
+    this._algoConfig = const AlgorithmConfig(),
+  ]);
 
   /// Swap the underlying exchange service (e.g. when user changes exchange).
   void updateExchangeService(ExchangeService service) {
     _exchangeService = service;
+  }
+
+  /// Update the algorithm configuration.
+  void updateAlgoConfig(AlgorithmConfig config) {
+    _algoConfig = config;
   }
 
   static const int _numSim = 10000;
@@ -24,23 +33,26 @@ class AnalysisService {
     tr('analysis.regimeHighVolShort'),
   ];
 
-  /// Transaction cost per round-trip (2 × 0.1% taker fee).
-  static const double _txCost = 0.002;
+  /// Transaction cost per round-trip.
+  double get _txCost => _algoConfig.txCost;
 
   /// Estimated slippage as fraction of price.
-  static const double _slippage = 0.0005;
+  double get _slippage => _algoConfig.slippage;
 
   /// Stop loss multiplier (k × distribution std dev).
-  static const double _slMultiplier = 1.5;
+  double get _slMultiplier => _algoConfig.stopMultiplier;
 
   /// Half-Kelly fraction.
   static const double _kellyFraction = 0.5;
 
   /// Max position size as fraction of capital.
-  static const double _maxPositionSize = 0.05;
+  double get _maxPositionSize => _algoConfig.kellyMax;
 
   /// Minimum TP probability to accept a trade.
   static const double _minTpProb = 0.40;
+
+  /// Leverage base factor — target SL loss base.
+  static const double _leverageBaseFactor = 0.35;
 
   // ───────────────────────────────────────────────────────────────────────────
   // Hybrid engine pipeline
@@ -186,6 +198,7 @@ class AnalysisService {
       period: period,
       stabilityScore: stabilityScore,
       regimeEntropy: regimeEntropy,
+      volScale: volScale,
     );
 
     // Sort by EV descending (best expected value first)
@@ -208,7 +221,15 @@ class AnalysisService {
       }
     }
 
-    // ── 10. Build summary ──
+    // ── 10. Compute persistenceBoost ──
+    final maxEntropySummary = log(3);
+    final normEntropy = maxEntropySummary > 0
+        ? (regimeEntropy / maxEntropySummary).clamp(0.0, 1.0)
+        : 1.0;
+    final persistenceBoost =
+        _algoConfig.persistenceMultiplier * (1.0 - normEntropy);
+
+    // ── 11. Build summary ──
     final trendLabel = (p50 > currentPrice)
         ? tr('analysis.bullish')
         : tr('analysis.bearish');
@@ -221,6 +242,8 @@ class AnalysisService {
       positions: positions,
       regimeInfo: regimeInfo,
       distributionStats: distStats,
+      volScale: volScale,
+      persistenceBoost: persistenceBoost,
       analysisSummary: tr(
         'analysis.summaryTemplate',
         namedArgs: {
@@ -238,6 +261,7 @@ class AnalysisService {
           'p75': p75.toStringAsFixed(2),
           'skew': skewness.toStringAsFixed(2),
           'kurt': kurtosis.toStringAsFixed(2),
+          'volScale': volScale.toStringAsFixed(2),
         },
       ),
     );
@@ -256,71 +280,70 @@ class AnalysisService {
     required TimePeriod period,
     required int stabilityScore,
     required double regimeEntropy,
+    required double volScale,
   }) {
     final regimeName = _regimeNames[currentRegime];
-    final isBullish = distStats.p50 >= currentPrice;
-    final periodScale = sqrt(period.hours / 24.0).clamp(0.25, 3.0);
+    final periodScale = sqrt(
+      period.hours / 24.0,
+    ).clamp(_algoConfig.periodScaleMin, _algoConfig.periodScaleMax);
 
     final positions = <TradingPosition>[];
 
-    // ── Regime base discounts (for 24h) ──
+    // ── Regime base discounts ──
     late final double consBase, aggBase;
     switch (currentRegime) {
       case 0:
-        consBase = 0.0015;
-        aggBase = 0.004;
+        consBase = _algoConfig.discountLow;
+        aggBase = _algoConfig.discountLow * 3.0;
       case 1:
-        consBase = 0.003;
-        aggBase = 0.007;
+        consBase = _algoConfig.discountMedium;
+        aggBase = _algoConfig.discountMedium * 2.5;
       case 2:
-        consBase = 0.005;
-        aggBase = 0.012;
+        consBase = _algoConfig.discountHigh;
+        aggBase = _algoConfig.discountHigh * 2.5;
       default:
-        consBase = 0.003;
-        aggBase = 0.007;
+        consBase = _algoConfig.discountMedium;
+        aggBase = _algoConfig.discountMedium * 2.5;
     }
 
-    // ── Try LONG positions ──
-    if (distStats.p50 >= currentPrice) {
-      final longPositions = _buildDirectionalPositions(
-        direction: TradeDirection.long,
-        currentPrice: currentPrice,
-        currentRegime: currentRegime,
-        regimeName: regimeName,
-        pathResults: pathResults,
-        distStats: distStats,
-        consBase: consBase,
-        aggBase: aggBase,
-        periodScale: periodScale,
-        stabilityScore: stabilityScore,
-        regimeEntropy: regimeEntropy,
-        period: period,
-      );
-      positions.addAll(longPositions);
-    }
+    // ── Always build BOTH long and short positions ──
+    final longPositions = _buildDirectionalPositions(
+      direction: TradeDirection.long,
+      currentPrice: currentPrice,
+      currentRegime: currentRegime,
+      regimeName: regimeName,
+      pathResults: pathResults,
+      distStats: distStats,
+      consBase: consBase,
+      aggBase: aggBase,
+      periodScale: periodScale,
+      stabilityScore: stabilityScore,
+      regimeEntropy: regimeEntropy,
+      period: period,
+      volScale: volScale,
+    );
+    positions.addAll(longPositions);
 
-    // ── Try SHORT positions ──
-    if (distStats.p50 < currentPrice) {
-      final shortPositions = _buildDirectionalPositions(
-        direction: TradeDirection.short,
-        currentPrice: currentPrice,
-        currentRegime: currentRegime,
-        regimeName: regimeName,
-        pathResults: pathResults,
-        distStats: distStats,
-        consBase: consBase,
-        aggBase: aggBase,
-        periodScale: periodScale,
-        stabilityScore: stabilityScore,
-        regimeEntropy: regimeEntropy,
-        period: period,
-      );
-      positions.addAll(shortPositions);
-    }
+    final shortPositions = _buildDirectionalPositions(
+      direction: TradeDirection.short,
+      currentPrice: currentPrice,
+      currentRegime: currentRegime,
+      regimeName: regimeName,
+      pathResults: pathResults,
+      distStats: distStats,
+      consBase: consBase,
+      aggBase: aggBase,
+      periodScale: periodScale,
+      stabilityScore: stabilityScore,
+      regimeEntropy: regimeEntropy,
+      period: period,
+      volScale: volScale,
+    );
+    positions.addAll(shortPositions);
 
-    // If no valid positions found (both directions have negative EV),
-    // return the best long attempt as informational
+    // If no valid positions found, force include best direction
     if (positions.isEmpty) {
+      final isBullish = distStats.p50 >= currentPrice;
       positions.addAll(
         _buildDirectionalPositions(
           direction: isBullish ? TradeDirection.long : TradeDirection.short,
@@ -335,6 +358,7 @@ class AnalysisService {
           stabilityScore: stabilityScore,
           regimeEntropy: regimeEntropy,
           period: period,
+          volScale: volScale,
           forceInclude: true,
         ),
       );
@@ -356,6 +380,7 @@ class AnalysisService {
     required int stabilityScore,
     required double regimeEntropy,
     required TimePeriod period,
+    required double volScale,
     bool forceInclude = false,
   }) {
     final isLong = direction == TradeDirection.long;
@@ -454,15 +479,32 @@ class AnalysisService {
     // ── Expected Value ──
     final consTpGain = (consExit - consEntry).abs();
     final consSlLoss = (consEntry - consStop).abs();
-    final consEV = consTpProb * consTpGain - consSlProb * consSlLoss;
     final consCost = currentPrice * (_txCost + _slippage);
-    final consEVAdj = consEV - consCost;
 
     final aggTpGain = (aggExit - aggEntry).abs();
     final aggSlLoss = (aggEntry - aggStop).abs();
-    final aggEV = aggTpProb * aggTpGain - aggSlProb * aggSlLoss;
     final aggCost = currentPrice * (_txCost + _slippage);
-    final aggEVAdj = aggEV - aggCost;
+
+    // ── Leverage calculation ──
+    final consLeverage = _calculateLeverage(
+      entry: consEntry,
+      stop: consStop,
+      confidence: consTpProb,
+      currentRegime: currentRegime,
+    );
+    final aggLeverage = _calculateLeverage(
+      entry: aggEntry,
+      stop: aggStop,
+      confidence: aggTpProb,
+      currentRegime: currentRegime,
+    );
+
+    // EV multiplied by leverage
+    final consEV = consTpProb * consTpGain - consSlProb * consSlLoss;
+    final consEVAdj = (consEV - consCost) * consLeverage;
+
+    final aggEV = aggTpProb * aggTpGain - aggSlProb * aggSlLoss;
+    final aggEVAdj = (aggEV - aggCost) * aggLeverage;
 
     // ── Kelly position sizing ──
     double consKelly = 0.0;
@@ -478,11 +520,15 @@ class AnalysisService {
       aggKelly = (_kellyFraction * fStar).clamp(0.0, _maxPositionSize);
     }
 
-    // ── ROI ──
-    final consRoi = isLong
+    // ── ROI (leveraged) ──
+    final consRawRoi = isLong
         ? _roi(consEntry, consExit)
-        : _roi(consExit, consEntry); // short: profit when price falls
-    final aggRoi = isLong ? _roi(aggEntry, aggExit) : _roi(aggExit, aggEntry);
+        : _roi(consExit, consEntry);
+    final aggRawRoi = isLong
+        ? _roi(aggEntry, aggExit)
+        : _roi(aggExit, aggEntry);
+    final consRoi = consRawRoi * consLeverage;
+    final aggRoi = aggRawRoi * aggLeverage;
 
     // ── Confidence (TP probability as percentage) ──
     final consConf = (consTpProb * 100).round().clamp(5, 95);
@@ -510,6 +556,7 @@ class AnalysisService {
         'ev': consEVAdj.toStringAsFixed(2),
         'kelly': (consKelly * 100).toStringAsFixed(1),
         'stability': stabilityScore.toString(),
+        'leverage': consLeverage.toString(),
       },
     );
 
@@ -527,6 +574,7 @@ class AnalysisService {
         'slProb': (aggSlProb * 100).toStringAsFixed(1),
         'ev': aggEVAdj.toStringAsFixed(2),
         'kelly': (aggKelly * 100).toStringAsFixed(1),
+        'leverage': aggLeverage.toString(),
       },
     );
 
@@ -546,6 +594,8 @@ class AnalysisService {
           expectedValue: consEVAdj,
           positionSizePct: consKelly * 100,
           strategyDescription: consDesc,
+          leverage: consLeverage,
+          durationHours: period.hours,
         ),
       );
     }
@@ -564,11 +614,42 @@ class AnalysisService {
           expectedValue: aggEVAdj,
           positionSizePct: aggKelly * 100,
           strategyDescription: aggDesc,
+          leverage: aggLeverage,
+          durationHours: period.hours,
         ),
       );
     }
 
     return positions;
+  }
+
+  /// Calculate leverage based on stop-loss distance, confidence, and regime.
+  int _calculateLeverage({
+    required double entry,
+    required double stop,
+    required double confidence,
+    required int currentRegime,
+  }) {
+    final slDistancePct = (entry - stop).abs() / entry;
+    if (slDistancePct <= 0) return 1;
+
+    final confScale = max(0.3, confidence);
+    late final double regimeScale;
+    switch (currentRegime) {
+      case 0:
+        regimeScale = 1.3; // LOW — calmer, allow more leverage
+      case 2:
+        regimeScale = 0.5; // HIGH — volatile, reduce leverage
+      default:
+        regimeScale = 1.0; // MEDIUM
+    }
+
+    final targetSlLoss = _leverageBaseFactor * confScale * regimeScale;
+    final leverage = (targetSlLoss / slDistancePct).round().clamp(
+      1,
+      _algoConfig.maxLeverage,
+    );
+    return leverage;
   }
 
   static double _roi(double entry, double exit) {
@@ -670,6 +751,18 @@ class AnalysisService {
     final discPct = ((entry - currentPrice).abs() / currentPrice * 100)
         .toStringAsFixed(2);
 
+    // ── Leverage for ludomania (max leverage, aggressive) ──
+    final ludoLeverage = _calculateLeverage(
+      entry: entry,
+      stop: stopLoss,
+      confidence: tpProb,
+      currentRegime: currentRegime,
+    );
+
+    // ── Leveraged EV and ROI ──
+    final evLeveraged = evAdj * ludoLeverage;
+    final roiLeveraged = roi * ludoLeverage;
+
     final desc = tr(
       'analysis.strategyLudomania',
       namedArgs: {
@@ -679,8 +772,9 @@ class AnalysisService {
         'side': isLong ? tr('analysis.below') : tr('analysis.above'),
         'tpProb': (tpProb * 100).toStringAsFixed(1),
         'slProb': (slProb * 100).toStringAsFixed(1),
-        'ev': evAdj.toStringAsFixed(2),
+        'ev': evLeveraged.toStringAsFixed(2),
         'kelly': (kelly * 100).toStringAsFixed(1),
+        'leverage': ludoLeverage.toString(),
       },
     );
 
@@ -689,14 +783,16 @@ class AnalysisService {
       entryPrice: _round4(entry),
       exitPrice: _round4(exit),
       stopLoss: _round4(stopLoss),
-      predictedROI: roi,
+      predictedROI: roiLeveraged,
       confidenceScore: conf,
       tpProbability: tpProb,
       slProbability: slProb,
-      expectedValue: evAdj,
+      expectedValue: evLeveraged,
       positionSizePct: kelly * 100,
       strategyDescription: desc,
       isLudomania: true,
+      leverage: ludoLeverage,
+      durationHours: period.hours,
     );
   }
 
@@ -794,6 +890,7 @@ class AnalysisService {
         predictedROI: p.topPosition.predictedROI,
         confidenceScore: p.topPosition.confidenceScore,
         expectedValue: p.topPosition.expectedValue,
+        leverage: p.topPosition.leverage,
         reasoning: tr(
           'leaderboard.reasoningTemplate',
           namedArgs: {
@@ -804,6 +901,7 @@ class AnalysisService {
             'paths': _numSim.toString(),
             'horizon': period.displayName,
             'ev': p.topPosition.expectedValue.toStringAsFixed(2),
+            'leverage': p.topPosition.leverage.toString(),
           },
         ),
       );
